@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+build.gradle.kts
+src/main/resources/application.yaml
+*.kts
+*.yaml
