@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-traffic-logs
+      author: huy
+
+      changes:
+
+        - createTable:
+            tableName: traffic_logs
+            columns:
+
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+
+              - column:
+                  name: lane_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: vehicle_count
+                  type: INT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: congestion_level
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: recorded_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            constraintName: fk_traffic_lane
+            baseTableName: traffic_logs
+            baseColumnNames: lane_id
+            referencedTableName: lanes
+            referencedColumnNames: id

@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-camera-devices
+      author: huy
+
+      changes:
+
+        - createTable:
+            tableName: camera_devices
+            columns:
+
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+
+              - column:
+                  name: lane_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: ip_address
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_camera_lane
+            baseTableName: camera_devices
+            baseColumnNames: lane_id
+            referencedTableName: lanes
+            referencedColumnNames: id

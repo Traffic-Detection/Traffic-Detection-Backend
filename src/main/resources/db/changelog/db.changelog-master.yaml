@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/v1.0/001-create-role-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/002-create-user-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/003-create-intersection-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/004-create-lane-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/005-create-camera-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/006-create-traffic-log-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/007-create-signal-history-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/008-create-refresh-token-table.yaml
+
+  - include:
+      file: db/changelog/v1.0/009-seed-roles.yaml
