@@ -31,7 +31,7 @@ public class JwtServiceImpl implements JwtService {
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        byte[] keyBytes = Decoders.BASE64URL.decode(secret);
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 

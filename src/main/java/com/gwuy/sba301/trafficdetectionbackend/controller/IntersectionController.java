@@ -28,7 +28,7 @@ public class IntersectionController {
     })
     @PutMapping("/{id}/operating-mode")
     public ResponseEntity<IntersectionResponse> updateOperatingMode(
-            @PathVariable("id") Long id,
+            @PathVariable Long id,
             @RequestBody UpdateOperatingModeRequest request) {
 
         IntersectionResponse response = trafficControlService.updateOperatingMode(id, request);
