@@ -2,6 +2,7 @@ package com.gwuy.sba301.trafficdetectionbackend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -13,23 +14,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TrafficLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lane_id", nullable = false)
-    private Lane lane;
+    Lane lane;
 
     @Column(name = "vehicle_count", nullable = false)
-    private Integer vehicleCount;
+    Integer vehicleCount;
 
     @Column(name = "congestion_level", nullable = false)
-    private Double congestionLevel;
+    Double congestionLevel;
 
     @Column(name = "recorded_at", updatable = false)
     @CreationTimestamp
-    private LocalDateTime recordedAt;
+    LocalDateTime recordedAt;
 }

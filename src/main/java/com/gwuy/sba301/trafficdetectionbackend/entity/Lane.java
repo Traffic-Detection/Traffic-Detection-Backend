@@ -2,6 +2,7 @@ package com.gwuy.sba301.trafficdetectionbackend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "lanes")
@@ -10,22 +11,23 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Lane {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     // Quan hệ Many-To-One với Intersection
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "intersection_id", nullable = false)
-    private Intersection intersection;
+    Intersection intersection;
 
     @Column(name = "direction_name", nullable = false, length = 100)
-    private String directionName;
+    String directionName;
 
     // Tự tham chiếu (Self-referencing) đến làn đối diện
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "opposing_lane_id")
-    private Lane opposingLane;
+    Lane opposingLane;
 }
