@@ -2,7 +2,10 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impl;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.CameraResponse;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Lane;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
@@ -10,10 +13,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
 import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
-import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
-import com.gwuy.sba301.trafficdetectionbackend.repository.LaneRepository;
-import com.gwuy.sba301.trafficdetectionbackend.repository.SignalHistoryRepository;
-import com.gwuy.sba301.trafficdetectionbackend.repository.TrafficLogRepository;
+import com.gwuy.sba301.trafficdetectionbackend.repository.*;
 import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +31,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final LaneRepository laneRepository;
     private final TrafficLogRepository trafficLogRepository;
     private final SignalHistoryRepository signalHistoryRepository;
+    private final CameraDeviceRepository cameraDeviceRepository;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -132,5 +133,45 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         return trafficLogRepository.findFirstByLaneIdOrderByRecordedAtDesc(laneId)
                 .map(TrafficLog::getCongestionLevel)
                 .orElse(0.0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LaneResponse> getLanesByIntersection(Long intersectionId) {
+        return laneRepository.findByIntersectionId(intersectionId).stream()
+                .map(lane -> LaneResponse.builder()
+                        .id(lane.getId())
+                        .directionName(lane.getDirectionName())
+                        .opposingLaneId(lane.getOpposingLane() != null ? lane.getOpposingLane().getId() : null)
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SignalHistoryResponse> getSignalHistoryByIntersection(Long intersectionId) {
+        return signalHistoryRepository.findByIntersectionIdOrderByAppliedAtDesc(intersectionId).stream()
+                .map(history -> SignalHistoryResponse.builder()
+                        .id(history.getId())
+                        .intersectionId(history.getIntersection().getId())
+                        .laneId(history.getLane().getId())
+                        .greenDuration(history.getGreenDuration())
+                        .redDuration(history.getRedDuration())
+                        .appliedAt(history.getAppliedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CameraResponse> getAllCameras() {
+        return cameraDeviceRepository.findAll().stream()
+                .map(camera -> CameraResponse.builder()
+                        .id(camera.getId())
+                        .ipAddress(camera.getIpAddress())
+                        .status(camera.getStatus())
+                        .laneId(camera.getLane().getId())
+                        .build())
+                .toList();
     }
 }

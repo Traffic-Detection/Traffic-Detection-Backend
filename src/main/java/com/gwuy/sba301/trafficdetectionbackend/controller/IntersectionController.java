@@ -2,6 +2,8 @@ package com.gwuy.sba301.trafficdetectionbackend.controller;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
 import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -59,5 +61,17 @@ public class IntersectionController {
     public ResponseEntity<List<IntersectionResponse>> getAllIntersections() {
         List<IntersectionResponse> response = trafficControlService.getAllIntersections();
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get lanes by intersection ID")
+    @GetMapping("/{id}/lanes")
+    public ResponseEntity<List<LaneResponse>> getLanesByIntersection(@PathVariable Long id) {
+        return ResponseEntity.ok(trafficControlService.getLanesByIntersection(id));
+    }
+
+    @Operation(summary = "Get signal history by intersection ID")
+    @GetMapping("/{id}/signal-history")
+    public ResponseEntity<List<SignalHistoryResponse>> getSignalHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(trafficControlService.getSignalHistoryByIntersection(id));
     }
 }
