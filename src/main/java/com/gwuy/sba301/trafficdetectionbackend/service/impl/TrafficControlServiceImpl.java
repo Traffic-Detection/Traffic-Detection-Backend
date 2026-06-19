@@ -115,6 +115,19 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         log.info("Completed adaptive signal processing for IntersectionId={}", intersectionId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<IntersectionResponse> getAllIntersections() {
+        return intersectionRepository.findAll().stream()
+                .map(intersection -> IntersectionResponse.builder()
+                        .id(intersection.getId())
+                        .name(intersection.getName())
+                        .operatingMode(intersection.getOperatingMode())
+                        .createdAt(intersection.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
     private double getLatestCongestionLevel(Long laneId) {
         return trafficLogRepository.findFirstByLaneIdOrderByRecordedAtDesc(laneId)
                 .map(TrafficLog::getCongestionLevel)

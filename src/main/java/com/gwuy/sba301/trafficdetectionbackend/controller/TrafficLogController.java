@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid; // <-- Import thêm thư viện này
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +27,7 @@ public class TrafficLogController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping
-    public ResponseEntity<Void> recordTrafficLog(@RequestBody TrafficLogRequest request) {
-
+    public ResponseEntity<Void> recordTrafficLog(@Valid @RequestBody TrafficLogRequest request) {
         trafficControlService.recordTrafficLog(request);
         return ResponseEntity.ok().build();
     }

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "Intersection API")
 @RestController
 @RequestMapping("/api/intersections")
@@ -46,5 +48,16 @@ public class IntersectionController {
 
         trafficControlService.processAdaptiveSignals(id);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Get list of all intersections")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List fetched successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping
+    public ResponseEntity<List<IntersectionResponse>> getAllIntersections() {
+        List<IntersectionResponse> response = trafficControlService.getAllIntersections();
+        return ResponseEntity.ok(response);
     }
 }
