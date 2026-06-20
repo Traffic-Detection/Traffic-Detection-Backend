@@ -39,7 +39,7 @@ public class SimulationScheduler {
      * Generates random traffic data for North-South and East-West lanes.
      * Calculates synchronized signal decisions and publishes them via WebSocket.
      */
-    @Scheduled(fixedDelay = 5000)
+    //@Scheduled(fixedDelay = 5000)
     public void simulateTraffic() {
         // Generate random traffic values (0-100)
         // Congestion level rounded to 1 decimal place
@@ -55,7 +55,7 @@ public class SimulationScheduler {
                 Math.round(random.nextDouble() * 1000) / 10.0
         );
 
-        log.info("Generated traffic values: NS congestion={}, EW congestion={}", 
+        log.info("Generated traffic values: NS congestion={}, EW congestion={}",
                 northSouth.getCongestionLevel(), eastWest.getCongestionLevel());
 
         // Calculate synchronized intersection decision
