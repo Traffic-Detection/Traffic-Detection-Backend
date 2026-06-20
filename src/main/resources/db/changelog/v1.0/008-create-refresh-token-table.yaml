@@ -36,8 +36,8 @@ databaseChangeLog:
 
               - column:
                   name: revoked
-                  type: BOOLEAN
-                  defaultValueBoolean: false
+                  type: BIT(1)
+                  defaultValueNumeric: 0
 
         - addForeignKeyConstraint:
             constraintName: fk_refresh_token_user

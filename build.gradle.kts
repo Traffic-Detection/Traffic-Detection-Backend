@@ -37,6 +37,7 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation ("org.liquibase:liquibase-core")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

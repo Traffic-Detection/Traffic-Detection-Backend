@@ -42,8 +42,8 @@ databaseChangeLog:
 
               - column:
                   name: enabled
-                  type: BOOLEAN
-                  defaultValueBoolean: true
+                  type: BIT(1)
+                  defaultValueNumeric: 1
 
               - column:
                   name: role_id
