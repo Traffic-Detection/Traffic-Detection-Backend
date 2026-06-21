@@ -2,10 +2,7 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impl;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.CameraResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Lane;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
@@ -21,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -173,5 +171,19 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                         .laneId(camera.getLane().getId())
                         .build())
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TrafficLogResponse> getAllTrafficLogs() {
+        return trafficLogRepository.findAll().stream()
+                .map(log -> TrafficLogResponse.builder()
+                        .id(log.getId())
+                        .laneId(log.getLane().getId())
+                        .vehicleCount(log.getVehicleCount())
+                        .congestionLevel(log.getCongestionLevel())
+                        .recordedAt(log.getRecordedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

@@ -1,7 +1,7 @@
 package com.gwuy.sba301.trafficdetectionbackend.controller;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.CameraResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
+import com.gwuy.sba301.trafficdetectionbackend.service.SignalHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Tag(name = "Camera API")
+@Tag(name = "Signal History API")
 @RestController
-@RequestMapping("/api/cameras")
+@CrossOrigin("*")
+@RequestMapping("/api/signal-history")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
-public class CameraController {
+public class SignalHistoryController {
 
-    private final TrafficControlService trafficControlService;
+    private final SignalHistoryService signalHistoryService;
 
-    @Operation(summary = "Get list of all cameras")
+    @Operation(summary = "Get all signal history")
     @GetMapping
-    public ResponseEntity<List<CameraResponse>> getAllCameras() {
-        return ResponseEntity.ok(trafficControlService.getAllCameras());
+    public ResponseEntity<List<SignalHistoryResponse>> getAllSignalHistory() {
+        return ResponseEntity.ok(signalHistoryService.getAllSignalHistory());
     }
 }

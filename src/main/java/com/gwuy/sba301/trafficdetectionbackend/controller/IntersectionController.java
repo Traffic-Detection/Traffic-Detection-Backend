@@ -19,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/intersections")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class IntersectionController {
 
     private final TrafficControlService trafficControlService;
