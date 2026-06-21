@@ -1,0 +1,13 @@
+[2026-06-21] Task Completed:
+- Replaced all hardcoded/mock traffic data in dashboard.html and dashboard.js.
+- Integrated backend REST APIs:
+  * GET /api/intersections to load and auto-select intersections
+  * GET /api/intersections/{id}/lanes to load lanes dynamically
+  * GET /api/traffic/latest to update traffic statistics and heatmap
+  * GET /api/signals/latest to update signal stats and AI Decision Panel
+- Integrated WebSocket endpoints (/traffic-ws and topic /topic/signal) using SockJS and STOMP.
+- Updated line chart dynamically with up to 20 real-time congestion values.
+- Updated heatmap rendering dynamically with 0-30 green, 31-60 yellow, 61-100 red rules.
+- Implemented AI Decision Panel calculation for Highest Congestion Pair.
+- Handled WebSocket connection status display and auto-reconnection every 5 seconds.
+- Refactored JavaScript using clean functions, Fetch API, and async/await.

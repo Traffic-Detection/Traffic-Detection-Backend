@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "intersections")
+@Table(name = "intersections", uniqueConstraints = @UniqueConstraint(name = "uk_intersections_name", columnNames = "name"))
 @Getter
 @Setter
 @NoArgsConstructor

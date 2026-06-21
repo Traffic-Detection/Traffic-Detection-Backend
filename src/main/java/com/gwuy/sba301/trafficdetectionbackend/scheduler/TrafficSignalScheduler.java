@@ -32,24 +32,25 @@ public class TrafficSignalScheduler {
         log.info("[Scheduler] Started");
 
         try {
-            // 1. Read DB: Get intersections in AI_AUTO mode
-            List<Intersection> intersections = intersectionRepository.findByOperatingMode(OperatingMode.AI_AUTO);
-            
+            List<Intersection> intersections = intersectionRepository.findByOperatingModeWithLanes(OperatingMode.AI_AUTO);
+
+            if (intersections.isEmpty()) {
+                log.info("[Scheduler] No AI_AUTO intersections with lanes");
+                return;
+            }
+
             for (Intersection intersection : intersections) {
-                // 2. AI Algorithm & Processing
                 Map<String, Object> result = trafficAlgorithmService.calculateAdaptiveSignal(intersection);
-                
-                if (result.isEmpty()) continue;
+                if (result.isEmpty()) {
+                    continue;
+                }
 
                 @SuppressWarnings("unchecked")
                 List<SignalHistory> histories = (List<SignalHistory>) result.get("histories");
                 @SuppressWarnings("unchecked")
                 List<SignalMessage> messages = (List<SignalMessage>) result.get("messages");
 
-                // 3. Save DB: SignalHistory
                 signalHistoryService.saveAll(histories);
-
-                // 4. Send WebSocket realtime
                 webSocketService.sendSignalUpdates(messages);
             }
 

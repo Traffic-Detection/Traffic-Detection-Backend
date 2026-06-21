@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -30,12 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-
         String path = request.getServletPath();
-
         return path.startsWith("/auth/")
                 || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs");
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/dashboard")
+                || path.startsWith("/css/")
+                || path.startsWith("/js/")
+                || path.startsWith("/traffic-ws")
+                || path.startsWith("/api/intersections")
+                || path.startsWith("/api/traffic-logs");
     }
 
     @Override

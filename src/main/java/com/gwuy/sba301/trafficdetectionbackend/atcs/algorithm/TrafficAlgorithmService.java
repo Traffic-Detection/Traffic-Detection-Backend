@@ -44,21 +44,40 @@ public class TrafficAlgorithmService {
         // 2. Identify pair of lanes with highest congestion
         // For each lane, the pair's congestion is (lane + opposing lane)
         Lane bestLane = null;
-        double maxPairCongestion = -1.0;
-        Set<Long> processedLanes = new HashSet<>();
+        double maxPairCongestion = -1;
+
+        Set<Long> visited = new HashSet<>();
 
         for (Lane lane : lanes) {
-            if (processedLanes.contains(lane.getId())) continue;
 
-            double currentCongestion = laneCongestionMap.get(lane.getId());
-            double opposingCongestion = 0.0;
-            if (lane.getOpposingLane() != null) {
-                opposingCongestion = laneCongestionMap.getOrDefault(lane.getOpposingLane().getId(), 0.0);
-                processedLanes.add(lane.getOpposingLane().getId());
+            if (visited.contains(lane.getId())) {
+                continue;
             }
-            processedLanes.add(lane.getId());
 
-            double pairCongestion = currentCongestion + opposingCongestion;
+            double laneCongestion = laneCongestionMap.getOrDefault(lane.getId(), 0.0);
+            double opposingCongestion = 0.0;
+
+            if (lane.getOpposingLane() != null) {
+                opposingCongestion = laneCongestionMap.getOrDefault(
+                        lane.getOpposingLane().getId(),
+                        0.0
+                );
+                visited.add(lane.getOpposingLane().getId());
+            }
+
+            visited.add(lane.getId());
+
+            double pairCongestion = laneCongestion + opposingCongestion;
+
+            log.info(
+                    "[AI] Pair {}({}) + {}({}) = {}",
+                    lane.getDirectionName(),
+                    laneCongestion,
+                    lane.getOpposingLane() == null ? "-" : lane.getOpposingLane().getDirectionName(),
+                    opposingCongestion,
+                    pairCongestion
+            );
+
             if (pairCongestion > maxPairCongestion) {
                 maxPairCongestion = pairCongestion;
                 bestLane = lane;
@@ -67,10 +86,18 @@ public class TrafficAlgorithmService {
 
         if (bestLane == null) return Collections.emptyMap();
 
-        log.info("[AI] Highest congestion lane = {}", bestLane.getDirectionName());
-        if (bestLane.getOpposingLane() != null) {
-            log.info("[AI] Opposing lane = {}", bestLane.getOpposingLane().getDirectionName());
-        }
+        log.info(
+                "[AI] Winning pair: {} <-> {}",
+                bestLane.getDirectionName(),
+                bestLane.getOpposingLane() == null
+                        ? "-"
+                        : bestLane.getOpposingLane().getDirectionName()
+        );
+
+        log.info(
+                "[AI] Pair congestion = {}",
+                maxPairCongestion
+        );
 
         // 3. Determine signal for each lane
         List<SignalHistory> histories = new ArrayList<>();
@@ -85,8 +112,15 @@ public class TrafficAlgorithmService {
         int greenDuration = calculateGreenDuration(winningCongestion);
         int redDuration = TOTAL_CYCLE - greenDuration;
         String trafficLevel = getTrafficLevel(winningCongestion);
-        
-        log.info("[AI] Green = {}, Red = {}, Level = {}", greenDuration, redDuration, trafficLevel);
+
+        log.info(
+                "[AI] {} + {} => GREEN={}s RED={}s LEVEL={}",
+                bestLane.getDirectionName(),
+                bestLane.getOpposingLane().getDirectionName(),
+                greenDuration,
+                redDuration,
+                trafficLevel
+        );
 
         Set<Long> winningPairIds = new HashSet<>();
         winningPairIds.add(bestLane.getId());
@@ -119,11 +153,20 @@ public class TrafficAlgorithmService {
                     .laneId(lane.getId())
                     .direction(lane.getDirectionName())
                     .signal(signal)
-                    .greenDuration(greenDuration)
-                    .redDuration(redDuration)
+                    .greenDuration(isGreen ? greenDuration : 0)
+                    .redDuration(isGreen ? 0 : redDuration)
                     .remaining(isGreen ? greenDuration : redDuration)
                     .trafficLevel(isGreen ? trafficLevel : getTrafficLevel(laneCongestionMap.get(lane.getId())))
                     .build());
+
+        }
+
+        for (Lane lane : lanes) {
+            log.info(
+                    "[AI] Lane {} : {}%",
+                    lane.getDirectionName(),
+                    laneCongestionMap.get(lane.getId())
+            );
         }
 
         Map<String, Object> result = new HashMap<>();

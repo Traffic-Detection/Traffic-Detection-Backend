@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-de-duplicate-intersections
+      author: huy
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DELETE i2
+              FROM intersections i1
+              JOIN intersections i2 ON i1.name = i2.name AND i1.id < i2.id
+              LEFT JOIN lanes l ON l.intersection_id = i2.id
+              WHERE l.id IS NULL;

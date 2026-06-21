@@ -38,6 +38,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation ("org.liquibase:liquibase-core")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 }
 tasks.withType<Test> {
     useJUnitPlatform()
