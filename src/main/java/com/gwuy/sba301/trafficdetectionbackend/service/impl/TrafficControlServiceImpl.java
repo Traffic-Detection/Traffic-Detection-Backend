@@ -7,10 +7,10 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Lane;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
-import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
+import com.gwuy.sba301.trafficdetectionbackend.service.OperatingModeGuard;
 import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +30,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final TrafficLogRepository trafficLogRepository;
     private final SignalHistoryRepository signalHistoryRepository;
     private final CameraDeviceRepository cameraDeviceRepository;
+    private final OperatingModeGuard operatingModeGuard;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -79,9 +80,10 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         Intersection intersection = intersectionRepository.findById(intersectionId)
                 .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
 
-        // Chỉ chạy AI nếu ngã tư đang ở chế độ AI_AUTO
-        if (intersection.getOperatingMode() != OperatingMode.AI_AUTO) {
-            log.info("Skipping AI signal processing. IntersectionId={} is in {} mode.", intersectionId, intersection.getOperatingMode());
+        // BR-020: Guard — block non-AI_AUTO modes
+        if (!operatingModeGuard.isAiProcessingAllowed(intersection)) {
+            log.info("Skipping AI signal processing. IntersectionId={} is in {} mode.",
+                    intersectionId, intersection.getOperatingMode());
             return;
         }
 

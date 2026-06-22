@@ -14,4 +14,7 @@ public interface IntersectionRepository extends JpaRepository<Intersection, Long
 
     @Query("SELECT DISTINCT i FROM Intersection i JOIN Lane l ON l.intersection.id = i.id WHERE i.operatingMode = :operatingMode")
     List<Intersection> findByOperatingModeWithLanes(@Param("operatingMode") OperatingMode operatingMode);
+
+    @Query("SELECT DISTINCT i FROM Intersection i JOIN Lane l ON l.intersection.id = i.id")
+    List<Intersection> findAllWithLanes();
 }

@@ -4,8 +4,8 @@ import com.gwuy.sba301.trafficdetectionbackend.atcs.algorithm.TrafficAlgorithmSe
 import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
-import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
+import com.gwuy.sba301.trafficdetectionbackend.service.OperatingModeGuard;
 import com.gwuy.sba301.trafficdetectionbackend.service.SignalHistoryService;
 import com.gwuy.sba301.trafficdetectionbackend.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
@@ -25,21 +25,42 @@ public class TrafficSignalScheduler {
     private final TrafficAlgorithmService trafficAlgorithmService;
     private final SignalHistoryService signalHistoryService;
     private final WebSocketService webSocketService;
+    private final OperatingModeGuard operatingModeGuard;
 
     @Scheduled(fixedRate = 5000)
     public void runTrafficEngine() {
         long startTime = System.currentTimeMillis();
         log.info("[Scheduler] Started");
 
+        int processed = 0;
+        int skipped = 0;
+
         try {
-            List<Intersection> intersections = intersectionRepository.findByOperatingModeWithLanes(OperatingMode.AI_AUTO);
+            List<Intersection> intersections = intersectionRepository.findAllWithLanes();
 
             if (intersections.isEmpty()) {
-                log.info("[Scheduler] No AI_AUTO intersections with lanes");
+                log.info("[Scheduler] No intersections with lanes found");
                 return;
             }
 
+            log.info("[Scheduler] Found {} intersections", intersections.size());
+
             for (Intersection intersection : intersections) {
+
+                // BR-020: Guard — block non-AI_AUTO modes
+                if (!operatingModeGuard.isAiProcessingAllowed(intersection)) {
+                    log.info("[Scheduler] Skip intersection {} ({}) - reason: {}",
+                            intersection.getId(),
+                            intersection.getName(),
+                            intersection.getOperatingMode());
+                    skipped++;
+                    continue;
+                }
+
+                log.info("[Scheduler] Processing intersection {} ({})",
+                        intersection.getId(),
+                        intersection.getName());
+
                 Map<String, Object> result = trafficAlgorithmService.calculateAdaptiveSignal(intersection);
                 if (result.isEmpty()) {
                     continue;
@@ -52,13 +73,16 @@ public class TrafficSignalScheduler {
 
                 signalHistoryService.saveAll(histories);
                 webSocketService.sendSignalUpdates(messages);
+
+                processed++;
             }
 
         } catch (Exception e) {
             log.error("[Scheduler] Error in TrafficSignalScheduler: ", e);
         }
 
-        long endTime = System.currentTimeMillis();
-        log.info("[Scheduler] Finished in {} ms", (endTime - startTime));
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("[Scheduler] Finished - processed: {}, skipped: {}, duration: {}ms",
+                processed, skipped, duration);
     }
 }
