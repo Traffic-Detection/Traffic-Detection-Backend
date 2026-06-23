@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/traffic_db
+    url: ${DB_URL}
     username: root
-    password: 123456
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -15,7 +15,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
 jwt:
-  secret: o2aXuvh3lyMdy_cLqc3xvKB2jM6D905ulGeKtsnPEVk=
+  secret: ${JWT_SECRET}
   expiration: 86400000
   refresh-expiration: 86400000
 
