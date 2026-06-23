@@ -39,4 +39,7 @@ build.gradle.kts
 src/main/resources/application.yaml
 *.kts
 
-*.env
+# Environment files
+.env
+.env.*
+!.env.example
