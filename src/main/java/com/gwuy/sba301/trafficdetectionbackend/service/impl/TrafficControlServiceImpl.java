@@ -155,6 +155,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                         .id(lane.getId())
                         .directionName(lane.getDirectionName())
                         .opposingLaneId(lane.getOpposingLane() != null ? lane.getOpposingLane().getId() : null)
+                        .intersectionId(lane.getIntersection().getId())
                         .build())
                 .toList();
     }

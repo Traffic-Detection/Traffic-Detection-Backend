@@ -9,4 +9,5 @@ public class LaneResponse {
     private Long id;
     private String directionName;
     private Long opposingLaneId;
+    private Long intersectionId;
 }
