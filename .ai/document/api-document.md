@@ -23,10 +23,13 @@
 4. [Traffic Log API](#4-traffic-log-api)
    - [POST /api/traffic-logs](#41-post-apitraffic-logs)
    - [GET /api/traffic-logs](#42-get-apitraffic-logs)
+   - [WS /topic/traffic-logs](#43-ws-topictraffic-logs-real-time-stream)
 5. [Signal History API](#5-signal-history-api)
    - [GET /api/signal-history](#51-get-apisignal-history)
 6. [Dashboard (Server-side View)](#6-dashboard-server-side-view)
 7. [WebSocket](#7-websocket)
+   - [Signal Updates — /topic/signal](#71-topic-signal--tín-hiệu-đèn-real-time)
+   - [Traffic Logs — /topic/traffic-logs](#72-topictraffic-logs--traffic-log-real-time)
 8. [Enums Reference](#8-enums-reference)
 9. [Error Response Format](#9-error-response-format)
 
@@ -393,7 +396,12 @@ Lấy danh sách tất cả camera trong hệ thống.
 
 ### 4.1 POST /api/traffic-logs
 
-Ghi nhận log mật độ phương tiện từ Camera AI. Sau khi nhận log, hệ thống tự động tính toán và cập nhật tín hiệu đèn thích ứng (nếu nút giao đang ở chế độ `AI_AUTO`).
+Ghi nhận log mật độ phương tiện từ Camera AI.
+
+**Luồng xử lý sau khi nhận request:**
+1. Lưu `TrafficLog` vào database.
+2. **Tự động broadcast** `TrafficLogResponse` đến tất cả WebSocket client đang subscribe `/topic/traffic-logs`.
+3. Nếu nút giao ở chế độ `AI_AUTO`, tính toán và cập nhật tín hiệu đèn thích ứng.
 
 **Request Body**
 
@@ -421,7 +429,7 @@ Ghi nhận log mật độ phương tiện từ Camera AI. Sau khi nhận log, h
 
 | Code | Mô tả                     |
 | ---- | ------------------------- |
-| 200  | Ghi log thành công        |
+| 200  | Ghi log thành công + broadcast WS |
 | 400  | Request body không hợp lệ |
 | 404  | Không tìm thấy làn đường  |
 | 500  | Lỗi server nội bộ         |
@@ -430,7 +438,7 @@ Ghi nhận log mật độ phương tiện từ Camera AI. Sau khi nhận log, h
 
 ### 4.2 GET /api/traffic-logs
 
-Lấy toàn bộ lịch sử traffic log trong hệ thống.
+Lấy toàn bộ lịch sử traffic log trong hệ thống. **Dùng cho initial load** — để nhận dữ liệu liên tục theo thời gian thực, hãy subscribe WebSocket topic `/topic/traffic-logs` (xem [4.3](#43-ws-topictraffic-logs-real-time-stream)).
 
 **Request:** Không có body, không có params.
 
@@ -455,6 +463,80 @@ Lấy toàn bộ lịch sử traffic log trong hệ thống.
 | `vehicleCount`    | Integer       | Số lượng phương tiện ghi nhận  |
 | `congestionLevel` | Double        | Mức độ tắc nghẽn (0.0 – 100.0) |
 | `recordedAt`      | LocalDateTime | Thời điểm ghi log              |
+
+---
+
+### 4.3 WS /topic/traffic-logs — Real-time Stream
+
+Nhận traffic log liên tục qua WebSocket (STOMP). Có **hai cơ chế** nhận dữ liệu:
+
+#### Cơ chế 1: Push tự động (Event-driven)
+Mỗi khi Camera AI gửi `POST /api/traffic-logs`, server **tự động broadcast** log mới đến tất cả client đang subscribe `/topic/traffic-logs`. Client không cần làm gì thêm.
+
+#### Cơ chế 2: Request snapshot (On-demand)
+Client gửi message đến `/app/traffic-logs` để yêu cầu toàn bộ danh sách log hiện tại. Server sẽ broadcast list đến `/topic/traffic-logs`.
+
+**Kết nối & Subscribe (JavaScript)**
+
+```javascript
+const socket = new SockJS('http://localhost:8080/traffic-ws');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({}, () => {
+  // Subscribe nhận traffic log real-time
+  stompClient.subscribe('/topic/traffic-logs', (message) => {
+    const data = JSON.parse(message.body);
+    // data có thể là 1 object (log mới) hoặc array (snapshot)
+    console.log('Traffic log update:', data);
+  });
+
+  // (Tuỳ chọn) Request snapshot toàn bộ logs ngay khi kết nối
+  stompClient.send('/app/traffic-logs', {}, '');
+});
+```
+
+**Payload nhận được — TrafficLogResponse (log mới đơn lẻ)**
+
+```json
+{
+  "id": 1001,
+  "laneId": 101,
+  "vehicleCount": 35,
+  "congestionLevel": 72.5,
+  "recordedAt": "2024-01-15T10:05:00"
+}
+```
+
+**Payload nhận được — TrafficLogResponse[] (khi request snapshot)**
+
+```json
+[
+  {
+    "id": 1000,
+    "laneId": 102,
+    "vehicleCount": 12,
+    "congestionLevel": 25.0,
+    "recordedAt": "2024-01-15T10:04:00"
+  },
+  {
+    "id": 1001,
+    "laneId": 101,
+    "vehicleCount": 35,
+    "congestionLevel": 72.5,
+    "recordedAt": "2024-01-15T10:05:00"
+  }
+]
+```
+
+| Field             | Type          | Mô tả                          |
+| ----------------- | ------------- | ------------------------------ |
+| `id`              | Long          | ID bản ghi log                 |
+| `laneId`          | Long          | ID làn đường                   |
+| `vehicleCount`    | Integer       | Số lượng phương tiện ghi nhận  |
+| `congestionLevel` | Double        | Mức độ tắc nghẽn (0.0 – 100.0) |
+| `recordedAt`      | LocalDateTime | Thời điểm ghi log              |
+
+> **Khuyến nghị:** Dùng `GET /api/traffic-logs` để load dữ liệu ban đầu khi trang khởi động, sau đó subscribe `/topic/traffic-logs` để nhận cập nhật real-time mà không cần polling.
 
 ---
 
@@ -520,23 +602,33 @@ Lấy toàn bộ lịch sử tín hiệu đèn của tất cả các nút giao.
 
 ## 7. WebSocket
 
-Hệ thống sử dụng **STOMP over SockJS** để push tín hiệu đèn real-time đến client.
+Hệ thống sử dụng **STOMP over SockJS** để push dữ liệu real-time đến client.
 
-### Kết nối
+### Thông tin kết nối
 
-| Thông số | Giá trị                          |
-| -------- | -------------------------------- |
-| Endpoint | `ws://localhost:8080/traffic-ws` |
-| Fallback | SockJS                           |
-| Protocol | STOMP                            |
+| Thông số              | Giá trị                          |
+| --------------------- | -------------------------------- |
+| Endpoint              | `ws://localhost:8080/traffic-ws` |
+| Fallback              | SockJS                           |
+| Protocol              | STOMP                            |
+| App destination prefix | `/app`                          |
+| Broker prefix         | `/topic`                         |
 
-### Subscribe Topic
+### Tổng quan các Topic & Message Mapping
 
-| Topic            | Mô tả                                                    |
-| ---------------- | -------------------------------------------------------- |
-| `/topic/traffic` | Nhận `SignalMessage` theo thời gian thực từ AI Scheduler |
+| Loại    | Địa chỉ                 | Payload                    | Trigger                                        |
+| ------- | ----------------------- | -------------------------- | ---------------------------------------------- |
+| SUB     | `/topic/signal`         | `SignalMessage`            | AI Scheduler mỗi 5 giây                        |
+| SUB     | `/topic/traffic-logs`   | `TrafficLogResponse` hoặc `TrafficLogResponse[]` | POST log mới hoặc client gửi `/app/traffic-logs` |
+| SEND    | `/app/traffic-logs`     | _(body rỗng)_              | Client yêu cầu snapshot toàn bộ logs           |
 
-### SignalMessage (WebSocket payload)
+---
+
+### 7.1 /topic/signal — Tín hiệu đèn real-time
+
+**Trigger:** `TrafficSignalScheduler` chạy mỗi **5 giây** (`@Scheduled(fixedRate = 5000)`). Chỉ các nút giao ở chế độ `AI_AUTO` mới được xử lý và broadcast.
+
+**Payload — SignalMessage**
 
 ```json
 {
@@ -562,9 +654,74 @@ Hệ thống sử dụng **STOMP over SockJS** để push tín hiệu đèn real
 | `remaining`      | Integer | Thời gian còn lại (giây)                          |
 | `trafficLevel`   | String  | Mức tắc nghẽn: `LOW`, `MEDIUM`, `HIGH`            |
 
-### Scheduler Trigger
+---
 
-Hệ thống tự động tính toán và broadcast tín hiệu mỗi **5 giây** (`@Scheduled(fixedRate = 5000)`) thông qua `TrafficSignalScheduler`. Chỉ các nút giao ở chế độ `AI_AUTO` mới được xử lý.
+### 7.2 /topic/traffic-logs — Traffic Log real-time
+
+**Trigger:** Có hai nguồn kích hoạt:
+- **Event-driven:** Mỗi khi `POST /api/traffic-logs` được gọi → server broadcast `TrafficLogResponse` (đơn lẻ) đến topic này.
+- **On-demand:** Client gửi message đến `/app/traffic-logs` → server broadcast `TrafficLogResponse[]` (toàn bộ danh sách).
+
+**Payload — TrafficLogResponse (đơn lẻ, nhận khi có log mới)**
+
+```json
+{
+  "id": 1001,
+  "laneId": 101,
+  "vehicleCount": 35,
+  "congestionLevel": 72.5,
+  "recordedAt": "2024-01-15T10:05:00"
+}
+```
+
+**Payload — TrafficLogResponse[] (nhận khi request snapshot)**
+
+```json
+[
+  {
+    "id": 1000,
+    "laneId": 102,
+    "vehicleCount": 12,
+    "congestionLevel": 25.0,
+    "recordedAt": "2024-01-15T10:04:00"
+  },
+  {
+    "id": 1001,
+    "laneId": 101,
+    "vehicleCount": 35,
+    "congestionLevel": 72.5,
+    "recordedAt": "2024-01-15T10:05:00"
+  }
+]
+```
+
+**Ví dụ client (JavaScript — STOMP/SockJS)**
+
+```javascript
+const socket = new SockJS('http://localhost:8080/traffic-ws');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({}, () => {
+  // Bước 1: Subscribe nhận updates liên tục
+  stompClient.subscribe('/topic/traffic-logs', (message) => {
+    const data = JSON.parse(message.body);
+    if (Array.isArray(data)) {
+      // Snapshot: render toàn bộ danh sách
+      renderAllLogs(data);
+    } else {
+      // Log mới: thêm vào đầu danh sách
+      prependLog(data);
+    }
+  });
+
+  // Bước 2: (Tuỳ chọn) Request snapshot dữ liệu ban đầu
+  stompClient.send('/app/traffic-logs', {}, '');
+});
+```
+
+> **Pattern khuyến nghị:**
+> 1. Gọi `GET /api/traffic-logs` để render dữ liệu ban đầu.
+> 2. Subscribe `/topic/traffic-logs` để nhận mọi log mới mà không cần polling.
 
 ---
 
@@ -632,8 +789,10 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 | GET    | `/api/intersections/{id}/lanes`            | Lấy danh sách làn đường              | ❌   |
 | GET    | `/api/intersections/{id}/signal-history`   | Lấy lịch sử tín hiệu của nút giao    | ❌   |
 | GET    | `/api/cameras`                             | Lấy danh sách camera                 | ❌   |
-| POST   | `/api/traffic-logs`                        | Ghi log mật độ phương tiện từ AI cam | ❌   |
-| GET    | `/api/traffic-logs`                        | Lấy tất cả traffic log               | ❌   |
+| POST   | `/api/traffic-logs`                        | Ghi log mật độ phương tiện + broadcast WS | ❌   |
+| GET    | `/api/traffic-logs`                        | Lấy tất cả traffic log (initial load) | ❌   |
 | GET    | `/api/signal-history`                      | Lấy tất cả lịch sử tín hiệu          | ❌   |
-| WS     | `ws://localhost:8080/traffic-ws`           | Kết nối WebSocket STOMP              | ❌   |
-| SUB    | `/topic/traffic`                           | Subscribe nhận tín hiệu real-time    | ❌   |
+| WS     | `ws://localhost:8080/traffic-ws`           | Kết nối WebSocket STOMP               | ❌   |
+| SUB    | `/topic/signal`                            | Subscribe nhận tín hiệu đèn real-time | ❌   |
+| SUB    | `/topic/traffic-logs`                      | Subscribe nhận traffic log real-time  | ❌   |
+| SEND   | `/app/traffic-logs`                        | Request snapshot toàn bộ traffic logs | ❌   |

@@ -12,6 +12,7 @@ import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
 import com.gwuy.sba301.trafficdetectionbackend.service.OperatingModeGuard;
 import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
+import com.gwuy.sba301.trafficdetectionbackend.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final SignalHistoryRepository signalHistoryRepository;
     private final CameraDeviceRepository cameraDeviceRepository;
     private final OperatingModeGuard operatingModeGuard;
+    private final WebSocketService webSocketService;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -72,6 +74,16 @@ public class TrafficControlServiceImpl implements TrafficControlService {
 
         trafficLogRepository.save(trafficLog);
         log.info("Recorded traffic log for LaneId={}. Congestion: {}%", request.getLaneId(), request.getCongestionLevel());
+
+        // Broadcast new log to WebSocket subscribers via /topic/traffic-logs
+        TrafficLogResponse response = TrafficLogResponse.builder()
+                .id(trafficLog.getId())
+                .laneId(trafficLog.getLane().getId())
+                .vehicleCount(trafficLog.getVehicleCount())
+                .congestionLevel(trafficLog.getCongestionLevel())
+                .recordedAt(trafficLog.getRecordedAt())
+                .build();
+        webSocketService.sendTrafficLog(response);
     }
 
     @Override
