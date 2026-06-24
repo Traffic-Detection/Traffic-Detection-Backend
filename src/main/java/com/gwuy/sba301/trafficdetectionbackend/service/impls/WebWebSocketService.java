@@ -29,10 +29,6 @@ public class WebWebSocketService implements IWebSocketService {
         log.info("[WS] Sent {} messages to /topic/signal", messages.size());
     }
 
-    /**
-     * Broadcast a new traffic log entry to all subscribers of /topic/traffic-logs.
-     * Called every time a new log is recorded via POST /api/traffic-logs.
-     */
     @Override
     public void sendTrafficLog(TrafficLogResponse trafficLog) {
         messagingTemplate.convertAndSend("/topic/traffic-logs", trafficLog);
@@ -40,9 +36,6 @@ public class WebWebSocketService implements IWebSocketService {
                 trafficLog.getLaneId(), trafficLog.getCongestionLevel());
     }
 
-    /**
-     * Broadcast a list of traffic logs (e.g. on initial connection snapshot).
-     */
     @Override
     public void sendTrafficLogs(List<TrafficLogResponse> logs) {
         messagingTemplate.convertAndSend("/topic/traffic-logs", logs);

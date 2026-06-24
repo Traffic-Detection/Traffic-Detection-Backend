@@ -47,7 +47,6 @@ public class TrafficSignalScheduler {
 
             for (Intersection intersection : intersections) {
 
-                // BR-020: Guard — block non-AI_AUTO modes
                 if (!operatingModeGuard.isAiProcessingAllowed(intersection)) {
                     log.info("[Scheduler] Skip intersection {} ({}) - reason: {}",
                             intersection.getId(),

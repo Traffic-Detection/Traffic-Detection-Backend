@@ -5,15 +5,6 @@ import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IOperatingMode
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-/**
- * Centralized guard service for operating mode checks.
- * <p>
- * Encapsulates the business rule (BR-020): AI processing is only permitted
- * when an intersection's operating mode allows it. All components that need
- * to verify mode eligibility should delegate to this service instead of
- * performing inline checks.
- * </p>
- */
 @Slf4j
 @Service
 public class OperatingModeGuard implements IOperatingModeGuard {
