@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.service.impl;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.auth.LoginRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.auth.RegisterRequest;
@@ -10,8 +10,8 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.User;
 import com.gwuy.sba301.trafficdetectionbackend.repository.RefreshTokenRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.RoleRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.UserRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.AuthService;
-import com.gwuy.sba301.trafficdetectionbackend.service.JwtService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IAuthService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +24,7 @@ import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class IAuthServiceImpl implements IAuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

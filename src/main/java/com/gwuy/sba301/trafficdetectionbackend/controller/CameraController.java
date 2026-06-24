@@ -1,7 +1,7 @@
 package com.gwuy.sba301.trafficdetectionbackend.controller;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.CameraResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

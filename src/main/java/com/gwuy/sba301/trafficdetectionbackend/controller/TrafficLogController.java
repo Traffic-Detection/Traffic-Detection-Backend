@@ -2,8 +2,8 @@ package com.gwuy.sba301.trafficdetectionbackend.controller;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficLogResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
-import com.gwuy.sba301.trafficdetectionbackend.service.WebSocketService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IWebSocketService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -24,7 +24,7 @@ import java.util.List;
 public class TrafficLogController {
 
     private final TrafficControlService trafficControlService;
-    private final WebSocketService webSocketService;
+    private final IWebSocketService webSocketService;
 
     @Operation(summary = "Record traffic density log from Camera AI")
     @ApiResponses({

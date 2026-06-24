@@ -1,7 +1,8 @@
 package com.gwuy.sba301.trafficdetectionbackend.controller;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.SignalHistoryService;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.SignalHistoryServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ISignalHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SignalHistoryController {
 
-    private final SignalHistoryService signalHistoryService;
+    private final ISignalHistoryService signalHistoryService;
 
     @Operation(summary = "Get all signal history")
     @GetMapping

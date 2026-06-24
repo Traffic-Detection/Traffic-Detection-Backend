@@ -1,6 +1,6 @@
-package com.gwuy.sba301.trafficdetectionbackend.service.impl;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
-import com.gwuy.sba301.trafficdetectionbackend.service.JwtService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

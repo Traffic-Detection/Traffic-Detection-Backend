@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.service.impl;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

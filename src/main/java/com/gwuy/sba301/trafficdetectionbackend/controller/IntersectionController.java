@@ -4,7 +4,7 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRe
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

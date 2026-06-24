@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.service;
+package com.gwuy.sba301.trafficdetectionbackend.service.interfaces;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;

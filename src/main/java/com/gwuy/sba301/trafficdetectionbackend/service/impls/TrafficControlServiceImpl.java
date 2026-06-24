@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.service.impl;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
@@ -10,9 +10,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
-import com.gwuy.sba301.trafficdetectionbackend.service.OperatingModeGuard;
-import com.gwuy.sba301.trafficdetectionbackend.service.TrafficControlService;
-import com.gwuy.sba301.trafficdetectionbackend.service.WebSocketService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final SignalHistoryRepository signalHistoryRepository;
     private final CameraDeviceRepository cameraDeviceRepository;
     private final OperatingModeGuard operatingModeGuard;
-    private final WebSocketService webSocketService;
+    private final WebWebSocketService webSocketService;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây

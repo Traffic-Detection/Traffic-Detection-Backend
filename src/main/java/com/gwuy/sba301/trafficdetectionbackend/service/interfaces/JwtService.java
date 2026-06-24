@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.service;
+package com.gwuy.sba301.trafficdetectionbackend.service.interfaces;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -5,9 +5,9 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.OperatingModeGuard;
-import com.gwuy.sba301.trafficdetectionbackend.service.SignalHistoryService;
-import com.gwuy.sba301.trafficdetectionbackend.service.WebSocketService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ISignalHistoryService;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.OperatingModeGuard;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.WebWebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,8 +23,8 @@ public class TrafficSignalScheduler {
 
     private final IntersectionRepository intersectionRepository;
     private final TrafficAlgorithmService trafficAlgorithmService;
-    private final SignalHistoryService signalHistoryService;
-    private final WebSocketService webSocketService;
+    private final ISignalHistoryService signalHistoryService;
+    private final WebWebSocketService webSocketService;
     private final OperatingModeGuard operatingModeGuard;
 
     @Scheduled(fixedRate = 5000)

@@ -1,8 +1,8 @@
 package com.gwuy.sba301.trafficdetectionbackend.configuration;
 
 
-import com.gwuy.sba301.trafficdetectionbackend.service.JwtService;
-import com.gwuy.sba301.trafficdetectionbackend.service.impl.UserDetailsServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.JwtService;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor

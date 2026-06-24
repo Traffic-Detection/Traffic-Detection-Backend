@@ -1,6 +1,6 @@
 package com.gwuy.sba301.trafficdetectionbackend.configuration;
 
-import com.gwuy.sba301.trafficdetectionbackend.service.impl.UserDetailsServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
