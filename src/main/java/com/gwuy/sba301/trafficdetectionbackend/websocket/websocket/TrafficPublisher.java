@@ -1,6 +1,6 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.websocket;
+package com.gwuy.sba301.trafficdetectionbackend.websocket.websocket;
 
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.TrafficDecisionMessage;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficDecisionMessage;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 

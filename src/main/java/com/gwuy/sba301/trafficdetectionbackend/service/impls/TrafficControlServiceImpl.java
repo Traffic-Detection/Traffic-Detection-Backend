@@ -30,7 +30,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final SignalHistoryRepository signalHistoryRepository;
     private final CameraDeviceRepository cameraDeviceRepository;
     private final OperatingModeGuard operatingModeGuard;
-    private final WebWebSocketService webSocketService;
+    private final WebSocketServiceImpl webSocketServiceImpl;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -81,7 +81,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .congestionLevel(trafficLog.getCongestionLevel())
                 .recordedAt(trafficLog.getRecordedAt())
                 .build();
-        webSocketService.sendTrafficLog(response);
+        webSocketServiceImpl.sendTrafficLog(response);
     }
 
     @Override

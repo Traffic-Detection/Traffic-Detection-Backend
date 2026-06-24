@@ -1,5 +1,6 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.model;
+package com.gwuy.sba301.trafficdetectionbackend.dto.response;
 
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficInput;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

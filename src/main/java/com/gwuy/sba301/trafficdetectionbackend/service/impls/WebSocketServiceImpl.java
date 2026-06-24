@@ -1,6 +1,6 @@
 package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficLogResponse;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IWebSocketService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WebWebSocketService implements IWebSocketService {
+public class WebSocketServiceImpl implements IWebSocketService {
 
     private final SimpMessagingTemplate messagingTemplate;
 

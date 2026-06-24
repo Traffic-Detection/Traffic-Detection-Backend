@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.websocket;
+package com.gwuy.sba301.trafficdetectionbackend.websocket.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

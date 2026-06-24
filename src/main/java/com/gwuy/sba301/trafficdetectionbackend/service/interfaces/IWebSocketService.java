@@ -1,6 +1,6 @@
 package com.gwuy.sba301.trafficdetectionbackend.service.interfaces;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficLogResponse;
 
 import java.util.List;

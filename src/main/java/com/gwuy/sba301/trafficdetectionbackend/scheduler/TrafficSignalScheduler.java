@@ -1,13 +1,14 @@
 package com.gwuy.sba301.trafficdetectionbackend.scheduler;
 
-import com.gwuy.sba301.trafficdetectionbackend.atcs.algorithm.TrafficAlgorithmService;
-import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.TrafficAlgorithmServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ISignalHistoryService;
 import com.gwuy.sba301.trafficdetectionbackend.service.impls.OperatingModeGuard;
-import com.gwuy.sba301.trafficdetectionbackend.service.impls.WebWebSocketService;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.WebSocketServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ITrafficAlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,9 +23,9 @@ import java.util.Map;
 public class TrafficSignalScheduler {
 
     private final IntersectionRepository intersectionRepository;
-    private final TrafficAlgorithmService trafficAlgorithmService;
+    private final ITrafficAlgorithmService trafficAlgorithmServiceImpl;
     private final ISignalHistoryService signalHistoryService;
-    private final WebWebSocketService webSocketService;
+    private final WebSocketServiceImpl webSocketServiceImpl;
     private final OperatingModeGuard operatingModeGuard;
 
     @Scheduled(fixedRate = 5000)
@@ -60,7 +61,7 @@ public class TrafficSignalScheduler {
                         intersection.getId(),
                         intersection.getName());
 
-                Map<String, Object> result = trafficAlgorithmService.calculateAdaptiveSignal(intersection);
+                Map<String, Object> result = trafficAlgorithmServiceImpl.calculateAdaptiveSignal(intersection);
                 if (result.isEmpty()) {
                     continue;
                 }
@@ -71,7 +72,7 @@ public class TrafficSignalScheduler {
                 List<SignalMessage> messages = (List<SignalMessage>) result.get("messages");
 
                 signalHistoryService.saveAll(histories);
-                webSocketService.sendSignalUpdates(messages);
+                webSocketServiceImpl.sendSignalUpdates(messages);
 
                 processed++;
             }

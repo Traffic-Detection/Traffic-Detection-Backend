@@ -1,15 +1,16 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.algorithm;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.IntersectionDecision;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.SignalDecision;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.TrafficInput;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionDecision;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.SignalDecision;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficInput;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.AdaptiveSignalService;
 import org.springframework.stereotype.Service;
 
 /**
  * Service responsible for calculating adaptive traffic signal timings.
  */
 @Service
-public class AdaptiveSignalService {
+public class AdaptiveSignalServiceImpl implements AdaptiveSignalService {
 
     private static final int BASE_GREEN = 60;
     private static final int BASE_RED = 60;
@@ -23,6 +24,7 @@ public class AdaptiveSignalService {
      * @param eastWest   Traffic input for the East-West lane
      * @return IntersectionDecision containing synchronized timings for both directions
      */
+    @Override
     public IntersectionDecision calculateIntersectionDecision(TrafficInput northSouth, TrafficInput eastWest) {
         SignalDecision nsDecision;
         SignalDecision ewDecision;
@@ -59,6 +61,7 @@ public class AdaptiveSignalService {
      * @param opposingLane Traffic input of the opposing lane
      * @return SignalDecision containing the adjusted green and red durations
      */
+    @Override
     public SignalDecision calculateSignalTiming(TrafficInput currentLane, TrafficInput opposingLane) {
         double difference = currentLane.getCongestionLevel() - opposingLane.getCongestionLevel();
 

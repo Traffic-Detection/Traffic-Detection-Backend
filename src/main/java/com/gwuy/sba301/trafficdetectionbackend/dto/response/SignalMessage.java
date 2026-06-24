@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.dto;
+package com.gwuy.sba301.trafficdetectionbackend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

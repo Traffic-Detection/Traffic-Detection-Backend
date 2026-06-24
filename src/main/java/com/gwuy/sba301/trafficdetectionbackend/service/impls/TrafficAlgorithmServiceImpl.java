@@ -1,12 +1,13 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.algorithm;
+package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.SignalMessage;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Lane;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
 import com.gwuy.sba301.trafficdetectionbackend.repository.LaneRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.TrafficLogRepository;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ITrafficAlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,14 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TrafficAlgorithmService {
+public class TrafficAlgorithmServiceImpl implements ITrafficAlgorithmService {
 
     private final LaneRepository laneRepository;
     private final TrafficLogRepository trafficLogRepository;
 
     private static final int TOTAL_CYCLE = 80;
 
+    @Override
     public Map<String, Object> calculateAdaptiveSignal(Intersection intersection) {
         log.info("[AI] Processing intersection: {}", intersection.getName());
         
@@ -174,14 +176,14 @@ public class TrafficAlgorithmService {
         result.put("messages", messages);
         return result;
     }
-
-    private int calculateGreenDuration(double congestion) {
+    @Override
+    public int calculateGreenDuration(double congestion) {
         if (congestion <= 30) return 20;
         if (congestion <= 60) return 40;
         return 60;
     }
-
-    private String getTrafficLevel(double congestion) {
+    @Override
+    public String getTrafficLevel(double congestion) {
         if (congestion <= 30) return "LOW";
         if (congestion <= 60) return "MEDIUM";
         return "HIGH";

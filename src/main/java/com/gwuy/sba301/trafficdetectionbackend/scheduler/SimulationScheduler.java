@@ -1,12 +1,12 @@
-package com.gwuy.sba301.trafficdetectionbackend.atcs.scheduler;
+package com.gwuy.sba301.trafficdetectionbackend.scheduler;
 
-import com.gwuy.sba301.trafficdetectionbackend.atcs.algorithm.AdaptiveSignalService;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.IntersectionDecision;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.TrafficDecisionMessage;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.model.TrafficInput;
-import com.gwuy.sba301.trafficdetectionbackend.atcs.websocket.TrafficPublisher;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.AdaptiveSignalServiceImpl;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionDecision;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficDecisionMessage;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficInput;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.AdaptiveSignalService;
+import com.gwuy.sba301.trafficdetectionbackend.websocket.websocket.TrafficPublisher;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -19,18 +19,18 @@ import java.util.Random;
 @Component
 public class SimulationScheduler {
 
-    private final AdaptiveSignalService adaptiveSignalService;
+    private final AdaptiveSignalService adaptiveSignalServiceImpl;
     private final TrafficPublisher trafficPublisher;
     private final Random random = new Random();
 
     /**
      * Constructor for SimulationScheduler.
      *
-     * @param adaptiveSignalService the service used to calculate signal timings
+     * @param adaptiveSignalServiceImpl the service used to calculate signal timings
      * @param trafficPublisher the publisher used to send updates via WebSocket
      */
-    public SimulationScheduler(AdaptiveSignalService adaptiveSignalService, TrafficPublisher trafficPublisher) {
-        this.adaptiveSignalService = adaptiveSignalService;
+    public SimulationScheduler(AdaptiveSignalServiceImpl adaptiveSignalServiceImpl, TrafficPublisher trafficPublisher) {
+        this.adaptiveSignalServiceImpl = adaptiveSignalServiceImpl;
         this.trafficPublisher = trafficPublisher;
     }
 
@@ -59,7 +59,7 @@ public class SimulationScheduler {
                 northSouth.getCongestionLevel(), eastWest.getCongestionLevel());
 
         // Calculate synchronized intersection decision
-        IntersectionDecision decision = adaptiveSignalService.calculateIntersectionDecision(northSouth, eastWest);
+        IntersectionDecision decision = adaptiveSignalServiceImpl.calculateIntersectionDecision(northSouth, eastWest);
 
         log.info("Final AI decision: NS green={} red={}, EW green={} red={}",
                 decision.getNorthSouthDecision().getGreenDuration(),
