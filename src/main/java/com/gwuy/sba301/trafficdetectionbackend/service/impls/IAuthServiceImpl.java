@@ -1,9 +1,9 @@
 package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.request.auth.LoginRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.request.auth.RegisterRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.request.auth.TokenRefreshRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.auth.AuthResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.LoginRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.RegisterRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.TokenRefreshRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.AuthResponse;
 import com.gwuy.sba301.trafficdetectionbackend.entity.RefreshToken;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Role;
 import com.gwuy.sba301.trafficdetectionbackend.entity.User;

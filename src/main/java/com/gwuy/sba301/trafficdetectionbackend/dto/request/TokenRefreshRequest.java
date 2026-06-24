@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.dto.request.auth;
+package com.gwuy.sba301.trafficdetectionbackend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
