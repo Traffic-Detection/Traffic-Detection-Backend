@@ -5,7 +5,7 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficLogResponse;
 
 import java.util.List;
 
-public interface IWebSocketService {
+public interface WebSocketService {
     void sendSignalUpdate(SignalMessage message);
     void sendSignalUpdates(List<SignalMessage> messages);
     void sendTrafficLog(TrafficLogResponse trafficLog);

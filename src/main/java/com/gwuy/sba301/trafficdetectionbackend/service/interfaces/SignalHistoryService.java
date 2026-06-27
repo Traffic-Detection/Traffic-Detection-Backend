@@ -5,7 +5,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 
 import java.util.List;
 
-public interface ISignalHistoryService {
+public interface SignalHistoryService {
     void saveAll(List<SignalHistory> histories);
     List<SignalHistoryResponse> getAllSignalHistory();
 }

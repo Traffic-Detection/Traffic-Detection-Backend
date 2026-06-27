@@ -3,7 +3,7 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.repository.SignalHistoryRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ISignalHistoryService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.SignalHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SignalHistoryServiceImpl implements ISignalHistoryService {
+public class SignalHistoryServiceImpl implements SignalHistoryService {
 
     private final SignalHistoryRepository signalHistoryRepository;
 

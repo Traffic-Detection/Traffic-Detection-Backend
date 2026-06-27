@@ -1,13 +1,12 @@
 package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IOperatingModeGuard;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class OperatingModeGuard implements IOperatingModeGuard {
+public class OperatingModeGuard implements com.gwuy.sba301.trafficdetectionbackend.service.interfaces.OperatingModeGuard {
 
     /**
      * Checks whether AI-based signal processing is allowed for the given intersection.

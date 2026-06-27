@@ -10,7 +10,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.User;
 import com.gwuy.sba301.trafficdetectionbackend.repository.RefreshTokenRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.RoleRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.UserRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IAuthService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.AuthService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,7 +24,7 @@ import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
-public class IAuthServiceImpl implements IAuthService {
+public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

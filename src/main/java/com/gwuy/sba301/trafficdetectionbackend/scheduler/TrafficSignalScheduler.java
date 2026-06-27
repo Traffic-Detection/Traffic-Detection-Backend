@@ -1,14 +1,13 @@
 package com.gwuy.sba301.trafficdetectionbackend.scheduler;
 
-import com.gwuy.sba301.trafficdetectionbackend.service.impls.TrafficAlgorithmServiceImpl;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalMessage;
 import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ISignalHistoryService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.SignalHistoryService;
 import com.gwuy.sba301.trafficdetectionbackend.service.impls.OperatingModeGuard;
 import com.gwuy.sba301.trafficdetectionbackend.service.impls.WebSocketServiceImpl;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ITrafficAlgorithmService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficAlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,8 +22,8 @@ import java.util.Map;
 public class TrafficSignalScheduler {
 
     private final IntersectionRepository intersectionRepository;
-    private final ITrafficAlgorithmService trafficAlgorithmServiceImpl;
-    private final ISignalHistoryService signalHistoryService;
+    private final TrafficAlgorithmService trafficAlgorithmServiceImpl;
+    private final SignalHistoryService signalHistoryService;
     private final WebSocketServiceImpl webSocketServiceImpl;
     private final OperatingModeGuard operatingModeGuard;
 

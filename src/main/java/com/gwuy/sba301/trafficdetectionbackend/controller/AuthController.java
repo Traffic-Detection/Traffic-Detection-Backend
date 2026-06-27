@@ -4,7 +4,7 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.request.LoginRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.RegisterRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TokenRefreshRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.AuthResponse;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.IAuthService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
-    private final IAuthService IAuthService;
+    private final AuthService AuthService;
 
     @Operation(summary = "Register a new user")
     @ApiResponses({
@@ -31,7 +31,7 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(IAuthService.register(request));
+        return ResponseEntity.ok(AuthService.register(request));
     }
 
     @Operation(summary = "Authenticate a user and return tokens")
@@ -42,7 +42,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(IAuthService.login(request));
+        return ResponseEntity.ok(AuthService.login(request));
     }
 
     @Operation(summary = "Refresh an expired access token")
@@ -53,6 +53,6 @@ public class AuthController {
     })
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        return ResponseEntity.ok(IAuthService.refreshToken(request));
+        return ResponseEntity.ok(AuthService.refreshToken(request));
     }
 }

@@ -7,7 +7,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
 import com.gwuy.sba301.trafficdetectionbackend.repository.LaneRepository;
 import com.gwuy.sba301.trafficdetectionbackend.repository.TrafficLogRepository;
-import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ITrafficAlgorithmService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficAlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TrafficAlgorithmServiceImpl implements ITrafficAlgorithmService {
+public class TrafficAlgorithmServiceImpl implements TrafficAlgorithmService {
 
     private final LaneRepository laneRepository;
     private final TrafficLogRepository trafficLogRepository;

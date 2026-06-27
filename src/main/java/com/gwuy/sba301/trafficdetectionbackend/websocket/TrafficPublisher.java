@@ -1,4 +1,4 @@
-package com.gwuy.sba301.trafficdetectionbackend.websocket.websocket;
+package com.gwuy.sba301.trafficdetectionbackend.websocket;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficDecisionMessage;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

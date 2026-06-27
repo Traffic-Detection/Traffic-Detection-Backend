@@ -5,7 +5,7 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionDecision
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficDecisionMessage;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficInput;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.AdaptiveSignalService;
-import com.gwuy.sba301.trafficdetectionbackend.websocket.websocket.TrafficPublisher;
+import com.gwuy.sba301.trafficdetectionbackend.websocket.TrafficPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
