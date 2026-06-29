@@ -2,9 +2,8 @@ package com.gwuy.sba301.trafficdetectionbackend.enums;
 
 public enum OperatingMode {
 
-    AI_AUTO(true),
-    FIXED_TIME(false),
-    MANUAL_OVERRIDE(false);
+    AI(true),
+    MANUAL(false);
 
     private final boolean aiAllowed;
 
