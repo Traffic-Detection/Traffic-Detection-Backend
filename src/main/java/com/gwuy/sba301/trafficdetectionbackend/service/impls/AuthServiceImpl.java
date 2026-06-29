@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Email is already in use");
         }
 
-        Role userRole = roleRepository.findByName("USER")
+        Role userRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 
         User user = new User();

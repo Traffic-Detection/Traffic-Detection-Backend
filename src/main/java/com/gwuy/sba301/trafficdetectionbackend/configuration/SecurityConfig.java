@@ -34,7 +34,8 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 1. PUBLIC: Mở cửa cho Đăng nhập, Đăng ký và kết nối WebSocket
-                        .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/traffic-ws/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/refresh-token").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/traffic-ws/**").permitAll()
 
                         // 2. CAMERA AI: Chỉ dành riêng cho thiết bị phần cứng đẩy dữ liệu kẹt xe lên
                         .requestMatchers(HttpMethod.POST, "/api/traffic-logs").hasAuthority("ROLE_CAMERA")
@@ -56,7 +57,17 @@ public class SecurityConfig {
 
                 // Đăng ký Provider và đưa JwtFilter vào luồng kiểm tra
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            System.out.println("[DEBUG_LOG] Auth exception: " + authException.getMessage() + " for path: " + request.getServletPath());
+                            response.sendError(401, "Unauthorized");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            System.out.println("[DEBUG_LOG] Access denied: " + accessDeniedException.getMessage() + " for path: " + request.getServletPath());
+                            response.sendError(403, "Forbidden");
+                        })
+                );
 
         return http.build();
     }
