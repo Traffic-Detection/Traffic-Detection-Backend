@@ -34,6 +34,7 @@ public class SignalHistoryServiceImpl implements SignalHistoryService {
                         .intersectionId(history.getIntersection().getId())
                         .laneId(history.getLane().getId())
                         .greenDuration(history.getGreenDuration())
+                        .yellowDuration(history.getYellowDuration())
                         .redDuration(history.getRedDuration())
                         .appliedAt(history.getAppliedAt())
                         .build())

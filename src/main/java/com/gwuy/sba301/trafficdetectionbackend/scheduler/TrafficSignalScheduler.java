@@ -5,6 +5,7 @@ import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
 import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
 import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.repository.IntersectionRepository;
+import com.gwuy.sba301.trafficdetectionbackend.service.impls.ModeSwitchManager;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ManualSignalService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.SignalHistoryService;
 import com.gwuy.sba301.trafficdetectionbackend.service.impls.WebSocketServiceImpl;
@@ -27,6 +28,7 @@ public class TrafficSignalScheduler {
     private final SignalHistoryService signalHistoryService;
     private final WebSocketServiceImpl webSocketServiceImpl;
     private final ManualSignalService manualSignalService;
+    private final ModeSwitchManager modeSwitchManager;
 
     @Scheduled(fixedRate = 5000)
     public void runTrafficEngine() {
@@ -35,6 +37,7 @@ public class TrafficSignalScheduler {
 
         int processedAi = 0;
         int processedManual = 0;
+        int waitingCycle = 0;
 
         try {
             List<Intersection> intersections = intersectionRepository.findAllWithLanes();
@@ -48,6 +51,14 @@ public class TrafficSignalScheduler {
                 OperatingMode mode = intersection.getOperatingMode();
 
                 if (mode == OperatingMode.AI) {
+                    // Kiểm tra xem ngã tư có đang chờ hết chu kỳ MANUAL không
+                    if (!modeSwitchManager.isAiReady(intersection.getId())) {
+                        log.info("[Scheduler] Intersection {} đang chờ hết chu kỳ MANUAL. Bỏ qua.",
+                                intersection.getId());
+                        waitingCycle++;
+                        continue;
+                    }
+
                     // === NHÁNH AI ===
                     Map<String, Object> result = trafficAlgorithmServiceImpl.calculateAdaptiveSignal(intersection);
                     if (result.isEmpty()) continue;
@@ -64,10 +75,11 @@ public class TrafficSignalScheduler {
 
                 } else if (mode == OperatingMode.MANUAL) {
                     // === NHÁNH MANUAL ===
+                    // Chỉ gửi WebSocket 1 lần (broadcast-once, không gửi liên tục mỗi 5s)
                     List<SignalMessage> manualMessages = manualSignalService.getFixedSignals(intersection);
 
                     if (!manualMessages.isEmpty()) {
-                        // Theo thiết kế: KHÔNG lưu signal_history cho chế độ MANUAL
+                        // Không lưu signal_history cho chế độ MANUAL
                         webSocketServiceImpl.sendSignalUpdates(manualMessages);
                         processedManual++;
                     }
@@ -79,7 +91,7 @@ public class TrafficSignalScheduler {
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        log.info("[Scheduler] Finished - AI: {}, MANUAL: {}, duration: {}ms",
-                processedAi, processedManual, duration);
+        log.info("[Scheduler] Finished - AI: {}, MANUAL: {}, Waiting: {}, duration: {}ms",
+                processedAi, processedManual, waitingCycle, duration);
     }
 }

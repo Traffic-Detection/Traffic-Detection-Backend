@@ -1,7 +1,7 @@
 # Traffic Detection Backend — API Document
 
 > **Base URL:** `http://localhost:8080`
-> **Version:** 1.0.0
+> **Version:** 2.0.0
 > **Authentication:** JWT Bearer Token (hiện tại SecurityConfig đang `permitAll` — mọi request đều không cần xác thực)
 
 ---
@@ -26,12 +26,17 @@
    - [WS /topic/traffic-logs](#43-ws-topictraffic-logs-real-time-stream)
 5. [Signal History API](#5-signal-history-api)
    - [GET /api/signal-history](#51-get-apisignal-history)
-6. [Dashboard (Server-side View)](#6-dashboard-server-side-view)
-7. [WebSocket](#7-websocket)
-   - [Signal Updates — /topic/signal](#71-topic-signal--tín-hiệu-đèn-real-time)
-   - [Traffic Logs — /topic/traffic-logs](#72-topictraffic-logs--traffic-log-real-time)
-8. [Enums Reference](#8-enums-reference)
-9. [Error Response Format](#9-error-response-format)
+6. [Signal Config API](#6-signal-config-api)
+   - [GET /api/signal-configs](#61-get-apisignal-configs)
+   - [POST /api/signal-configs](#62-post-apisignal-configs)
+   - [PUT /api/signal-configs/{id}](#63-put-apisignal-configsid)
+   - [DELETE /api/signal-configs/{id}](#64-delete-apisignal-configsid)
+7. [Dashboard (Server-side View)](#7-dashboard-server-side-view)
+8. [WebSocket](#8-websocket)
+   - [Signal Updates — /topic/signal](#81-topic-signal--tín-hiệu-đèn-real-time)
+   - [Traffic Logs — /topic/traffic-logs](#82-topictraffic-logs--traffic-log-real-time)
+9. [Enums Reference](#9-enums-reference)
+10. [Error Response Format](#10-error-response-format)
 
 ---
 
@@ -171,13 +176,13 @@ Lấy danh sách tất cả các nút giao thông.
   {
     "id": 1,
     "name": "Ngã tư Hòa Bình",
-    "operatingMode": "AI_AUTO",
+    "operatingMode": "AI",
     "createdAt": "2024-01-15T08:30:00"
   },
   {
     "id": 2,
     "name": "Ngã tư Lê Lợi",
-    "operatingMode": "MANUAL_OVERRIDE",
+    "operatingMode": "MANUAL",
     "createdAt": "2024-01-16T09:00:00"
   }
 ]
@@ -201,7 +206,7 @@ Lấy danh sách tất cả các nút giao thông.
 
 ### 2.2 PUT /api/intersections/{id}/operating-mode
 
-Cập nhật chế độ hoạt động của nút giao (Manual Override).
+Cập nhật chế độ hoạt động của nút giao.
 
 **Path Parameter**
 
@@ -211,15 +216,15 @@ Cập nhật chế độ hoạt động của nút giao (Manual Override).
 
 **Request Body**
 
-| Field           | Type          | Required | Mô tả                                                  |
-| --------------- | ------------- | -------- | ------------------------------------------------------ |
-| `operatingMode` | OperatingMode | ✅       | Chế độ mới: `AI_AUTO`, `FIXED_TIME`, `MANUAL_OVERRIDE` |
+| Field           | Type          | Required | Mô tả                    |
+| --------------- | ------------- | -------- | ------------------------ |
+| `operatingMode` | OperatingMode | ✅       | Chế độ mới: `AI`, `MANUAL` |
 
 **Request Body Example**
 
 ```json
 {
-  "operatingMode": "MANUAL_OVERRIDE"
+  "operatingMode": "MANUAL"
 }
 ```
 
@@ -229,17 +234,25 @@ Cập nhật chế độ hoạt động của nút giao (Manual Override).
 {
   "id": 1,
   "name": "Ngã tư Hòa Bình",
-  "operatingMode": "MANUAL_OVERRIDE",
+  "operatingMode": "MANUAL",
   "createdAt": "2024-01-15T08:30:00"
 }
 ```
+
+**Business Rules**
+
+| Chuyển mode | Hành vi |
+|-------------|----------|
+| Bất kỳ → `MANUAL` | Hệ thống **validate** rằng `signal_configs` đã được thiết lập đầy đủ cho tất cả lanes. Nếu thiếu → trả `400`. |
+| `MANUAL` → `AI` | Hệ thống **chờ hết chu kỳ đèn** MANUAL hiện tại (green + yellow + red) trước khi bắt đầu xử lý AI. Cache MANUAL bị invalidate. |
+| `AI` → `MANUAL` | Cache MANUAL bị invalidate. Pending AI activation (nếu có) bị xoá. |
 
 **Response Codes**
 
 | Code | Mô tả                      |
 | ---- | -------------------------- |
 | 200  | Cập nhật chế độ thành công |
-| 400  | Request body không hợp lệ  |
+| 400  | Request body không hợp lệ hoặc thiếu signal_configs cho MANUAL  |
 | 404  | Không tìm thấy nút giao    |
 | 500  | Lỗi server nội bộ          |
 
@@ -267,7 +280,7 @@ Kích hoạt thủ công quá trình tính toán tín hiệu thích ứng AI cho
 | 404  | Không tìm thấy nút giao             |
 | 500  | Lỗi server nội bộ                   |
 
-> **Lưu ý:** Endpoint này chỉ thực sự xử lý AI nếu nút giao đang ở chế độ `AI_AUTO`. Các chế độ khác (`FIXED_TIME`, `MANUAL_OVERRIDE`) sẽ bị bỏ qua bởi `OperatingModeGuard`.
+> **Lưu ý:** Endpoint này chỉ thực sự xử lý AI nếu nút giao đang ở chế độ `AI`. Chế độ `MANUAL` sẽ bị bỏ qua bởi `OperatingModeGuard`.
 
 ---
 
@@ -325,6 +338,7 @@ Lấy lịch sử tín hiệu đèn của một nút giao.
     "intersectionId": 1,
     "laneId": 101,
     "greenDuration": 45,
+    "yellowDuration": 3,
     "redDuration": 30,
     "appliedAt": "2024-01-15T10:00:00"
   }
@@ -337,6 +351,7 @@ Lấy lịch sử tín hiệu đèn của một nút giao.
 | `intersectionId` | Long          | ID nút giao                        |
 | `laneId`         | Long          | ID làn đường được áp dụng tín hiệu |
 | `greenDuration`  | Integer       | Thời gian đèn xanh (giây)          |
+| `yellowDuration` | Integer       | Thời gian đèn vàng (giây)          |
 | `redDuration`    | Integer       | Thời gian đèn đỏ (giây)            |
 | `appliedAt`      | LocalDateTime | Thời điểm áp dụng tín hiệu         |
 
@@ -563,6 +578,7 @@ Lấy toàn bộ lịch sử tín hiệu đèn của tất cả các nút giao.
     "intersectionId": 1,
     "laneId": 101,
     "greenDuration": 45,
+    "yellowDuration": 3,
     "redDuration": 30,
     "appliedAt": "2024-01-15T10:00:00"
   },
@@ -571,6 +587,7 @@ Lấy toàn bộ lịch sử tín hiệu đèn của tất cả các nút giao.
     "intersectionId": 2,
     "laneId": 201,
     "greenDuration": 20,
+    "yellowDuration": 3,
     "redDuration": 55,
     "appliedAt": "2024-01-15T10:00:05"
   }
@@ -583,12 +600,174 @@ Lấy toàn bộ lịch sử tín hiệu đèn của tất cả các nút giao.
 | `intersectionId` | Long          | ID nút giao liên quan              |
 | `laneId`         | Long          | ID làn đường được áp dụng tín hiệu |
 | `greenDuration`  | Integer       | Thời gian đèn xanh (giây)          |
+| `yellowDuration` | Integer       | Thời gian đèn vàng (giây)          |
 | `redDuration`    | Integer       | Thời gian đèn đỏ (giây)            |
 | `appliedAt`      | LocalDateTime | Thời điểm áp dụng tín hiệu         |
 
 ---
 
-## 6. Dashboard (Server-side View)
+## 6. Signal Config API
+
+**Base path:** `/api/signal-configs`
+**Controller:** `SignalConfigController`
+**Tag:** `Signal Config API`
+
+> Quản lý cấu hình thời lượng đèn cho chế độ MANUAL. Mỗi lane trong một intersection cần có 1 bản ghi `signal_config` trước khi có thể chuyển sang chế độ MANUAL.
+
+---
+
+### 6.1 GET /api/signal-configs
+
+Lấy danh sách cấu hình đèn theo ngã tư.
+
+**Query Parameter**
+
+| Param            | Type | Required | Mô tả       |
+| ---------------- | ---- | -------- | ----------- |
+| `intersectionId` | Long | ✅       | ID nút giao |
+
+**Request Example**
+
+```
+GET /api/signal-configs?intersectionId=1
+```
+
+**Response `200 OK`** — Mảng `SignalConfigResponse[]`
+
+```json
+[
+  {
+    "id": 1,
+    "intersectionId": 1,
+    "laneId": 1,
+    "greenDuration": 45,
+    "yellowDuration": 5,
+    "redDuration": 40
+  },
+  {
+    "id": 2,
+    "intersectionId": 1,
+    "laneId": 2,
+    "greenDuration": 40,
+    "yellowDuration": 5,
+    "redDuration": 45
+  }
+]
+```
+
+| Field            | Type    | Mô tả                     |
+| ---------------- | ------- | ------------------------- |
+| `id`             | Long    | ID cấu hình               |
+| `intersectionId` | Long    | ID nút giao               |
+| `laneId`         | Long    | ID làn đường              |
+| `greenDuration`  | Integer | Thời gian đèn xanh (giây) |
+| `yellowDuration` | Integer | Thời gian đèn vàng (giây) |
+| `redDuration`    | Integer | Thời gian đèn đỏ (giây)   |
+
+---
+
+### 6.2 POST /api/signal-configs
+
+Tạo cấu hình đèn mới cho một làn đường. Mỗi cặp (intersection, lane) chỉ được có 1 config.
+
+**Request Body**
+
+| Field            | Type    | Required | Validation            |
+| ---------------- | ------- | -------- | --------------------- |
+| `intersectionId` | Long    | ✅       | NotNull               |
+| `laneId`         | Long    | ✅       | NotNull               |
+| `greenDuration`  | Integer | ✅       | NotNull, Min(1)       |
+| `yellowDuration` | Integer | ✅       | NotNull, Min(1)       |
+| `redDuration`    | Integer | ✅       | NotNull, Min(1)       |
+
+**Request Body Example**
+
+```json
+{
+  "intersectionId": 1,
+  "laneId": 1,
+  "greenDuration": 45,
+  "yellowDuration": 5,
+  "redDuration": 40
+}
+```
+
+**Response `200 OK`** — `SignalConfigResponse`
+
+```json
+{
+  "id": 1,
+  "intersectionId": 1,
+  "laneId": 1,
+  "greenDuration": 45,
+  "yellowDuration": 5,
+  "redDuration": 40
+}
+```
+
+**Response Codes**
+
+| Code | Mô tả                                       |
+| ---- | ------------------------------------------- |
+| 200  | Tạo thành công                               |
+| 400  | Validation thất bại hoặc config đã tồn tại   |
+| 404  | Intersection hoặc Lane không tồn tại         |
+| 500  | Lỗi server nội bộ                            |
+
+> **Lưu ý:** Khi tạo/cập nhật/xoá config, cache MANUAL của intersection tương ứng sẽ tự động bị invalidate.
+
+---
+
+### 6.3 PUT /api/signal-configs/{id}
+
+Cập nhật thời lượng đèn cho một cấu hình đã tồn tại.
+
+**Path Parameter**
+
+| Param | Type | Mô tả       |
+| ----- | ---- | ----------- |
+| `id`  | Long | ID cấu hình |
+
+**Request Body** — Giống [6.2 POST](#62-post-apisignal-configs)
+
+**Response `200 OK`** — `SignalConfigResponse`
+
+**Response Codes**
+
+| Code | Mô tả                           |
+| ---- | ------------------------------- |
+| 200  | Cập nhật thành công              |
+| 400  | Validation thất bại              |
+| 404  | Không tìm thấy cấu hình         |
+| 500  | Lỗi server nội bộ               |
+
+---
+
+### 6.4 DELETE /api/signal-configs/{id}
+
+Xoá cấu hình đèn.
+
+**Path Parameter**
+
+| Param | Type | Mô tả       |
+| ----- | ---- | ----------- |
+| `id`  | Long | ID cấu hình |
+
+**Response `200 OK`** — Body rỗng
+
+**Response Codes**
+
+| Code | Mô tả                           |
+| ---- | ------------------------------- |
+| 200  | Xoá thành công                   |
+| 404  | Không tìm thấy cấu hình         |
+| 500  | Lỗi server nội bộ               |
+
+> ⚠️ **Cẩn trọng:** Nếu xoá config trong khi intersection đang ở mode MANUAL, cần đảm bảo vẫn còn đủ config cho tất cả lanes, nếu không sẽ không thể chuyển lại MANUAL.
+
+---
+
+## 7. Dashboard (Server-side View)
 
 **Controller:** `DashboardController`
 
@@ -600,7 +779,7 @@ Lấy toàn bộ lịch sử tín hiệu đèn của tất cả các nút giao.
 
 ---
 
-## 7. WebSocket
+## 8. WebSocket
 
 Hệ thống sử dụng **STOMP over SockJS** để push dữ liệu real-time đến client.
 
@@ -618,17 +797,19 @@ Hệ thống sử dụng **STOMP over SockJS** để push dữ liệu real-time 
 
 | Loại    | Địa chỉ                 | Payload                    | Trigger                                        |
 | ------- | ----------------------- | -------------------------- | ---------------------------------------------- |
-| SUB     | `/topic/signal`         | `SignalMessage`            | AI Scheduler mỗi 5 giây                        |
+| SUB     | `/topic/signal`         | `SignalMessage`            | AI Scheduler mỗi 5s (AI) hoặc 1 lần (MANUAL)  |
 | SUB     | `/topic/traffic-logs`   | `TrafficLogResponse` hoặc `TrafficLogResponse[]` | POST log mới hoặc client gửi `/app/traffic-logs` |
 | SEND    | `/app/traffic-logs`     | _(body rỗng)_              | Client yêu cầu snapshot toàn bộ logs           |
 
 ---
 
-### 7.1 /topic/signal — Tín hiệu đèn real-time
+### 8.1 /topic/signal — Tín hiệu đèn real-time
 
-**Trigger:** `TrafficSignalScheduler` chạy mỗi **5 giây** (`@Scheduled(fixedRate = 5000)`). Chỉ các nút giao ở chế độ `AI_AUTO` mới được xử lý và broadcast.
+**Trigger:** `TrafficSignalScheduler` chạy mỗi **5 giây** (`@Scheduled(fixedRate = 5000)`).
+- **Mode AI:** Broadcast mỗi 5 giây với giá trị thích ứng.
+- **Mode MANUAL:** Broadcast **1 lần duy nhất** với giá trị cố định từ `signal_configs`. Không gửi lại trừ khi admin cập nhật config.
 
-**Payload — SignalMessage**
+**Payload — SignalMessage (mode AI)**
 
 ```json
 {
@@ -637,9 +818,26 @@ Hệ thống sử dụng **STOMP over SockJS** để push dữ liệu real-time 
   "direction": "NORTH_SOUTH",
   "signal": "GREEN",
   "greenDuration": 45,
+  "yellowDuration": 3,
   "redDuration": 30,
   "remaining": 45,
   "trafficLevel": "HIGH"
+}
+```
+
+**Payload — SignalMessage (mode MANUAL)**
+
+```json
+{
+  "intersectionId": 1,
+  "laneId": 101,
+  "direction": "NORTH_SOUTH",
+  "signal": "FIXED",
+  "greenDuration": 45,
+  "yellowDuration": 5,
+  "redDuration": 40,
+  "remaining": 45,
+  "trafficLevel": "MANUAL_MODE"
 }
 ```
 
@@ -648,15 +846,16 @@ Hệ thống sử dụng **STOMP over SockJS** để push dữ liệu real-time 
 | `intersectionId` | Long    | ID nút giao                                       |
 | `laneId`         | Long    | ID làn đường                                      |
 | `direction`      | String  | Hướng làn đường (e.g. `NORTH_SOUTH`, `EAST_WEST`) |
-| `signal`         | String  | Tín hiệu hiện tại: `GREEN` hoặc `RED`             |
+| `signal`         | String  | Tín hiệu hiện tại: `GREEN`, `RED`, hoặc `FIXED`   |
 | `greenDuration`  | Integer | Thời gian đèn xanh (giây)                         |
+| `yellowDuration` | Integer | Thời gian đèn vàng (giây)                         |
 | `redDuration`    | Integer | Thời gian đèn đỏ (giây)                           |
 | `remaining`      | Integer | Thời gian còn lại (giây)                          |
-| `trafficLevel`   | String  | Mức tắc nghẽn: `LOW`, `MEDIUM`, `HIGH`            |
+| `trafficLevel`   | String  | Mức tắc nghẽn: `LOW`, `MEDIUM`, `HIGH`, `MANUAL_MODE` |
 
 ---
 
-### 7.2 /topic/traffic-logs — Traffic Log real-time
+### 8.2 /topic/traffic-logs — Traffic Log real-time
 
 **Trigger:** Có hai nguồn kích hoạt:
 - **Event-driven:** Mỗi khi `POST /api/traffic-logs` được gọi → server broadcast `TrafficLogResponse` (đơn lẻ) đến topic này.
@@ -725,15 +924,14 @@ stompClient.connect({}, () => {
 
 ---
 
-## 8. Enums Reference
+## 9. Enums Reference
 
 ### OperatingMode
 
-| Giá trị           | AI Processing     | Mô tả                                      |
-| ----------------- | ----------------- | ------------------------------------------ |
-| `AI_AUTO`         | ✅ Cho phép       | Hệ thống AI tự động điều phối tín hiệu đèn |
-| `FIXED_TIME`      | ❌ Không cho phép | Đèn hoạt động theo lịch thời gian cố định  |
-| `MANUAL_OVERRIDE` | ❌ Không cho phép | Điều khiển thủ công bởi người vận hành     |
+| Giá trị   | AI Processing     | Mô tả                                                    |
+| --------- | ----------------- | -------------------------------------------------------- |
+| `AI`      | ✅ Cho phép       | Hệ thống AI tự động điều phối tín hiệu đèn dựa trên traffic_log |
+| `MANUAL`  | ❌ Không cho phép | Đèn hoạt động theo thời lượng cố định từ bảng signal_configs     |
 
 ### CameraStatus
 
@@ -745,7 +943,7 @@ stompClient.connect({}, () => {
 
 ---
 
-## 9. Error Response Format
+## 10. Error Response Format
 
 Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExceptionHandler` xử lý:
 
@@ -784,7 +982,7 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 | POST   | `/auth/login`                              | Đăng nhập                            | ❌   |
 | POST   | `/auth/refresh-token`                      | Làm mới token                        | ❌   |
 | GET    | `/api/intersections`                       | Lấy danh sách nút giao               | ❌   |
-| PUT    | `/api/intersections/{id}/operating-mode`   | Cập nhật chế độ hoạt động            | ❌   |
+| PUT    | `/api/intersections/{id}/operating-mode`   | Chuyển chế độ AI/MANUAL              | ❌   |
 | POST   | `/api/intersections/{id}/adaptive-signals` | Trigger AI xử lý tín hiệu (test)     | ❌   |
 | GET    | `/api/intersections/{id}/lanes`            | Lấy danh sách làn đường              | ❌   |
 | GET    | `/api/intersections/{id}/signal-history`   | Lấy lịch sử tín hiệu của nút giao    | ❌   |
@@ -792,6 +990,10 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 | POST   | `/api/traffic-logs`                        | Ghi log mật độ phương tiện + broadcast WS | ❌   |
 | GET    | `/api/traffic-logs`                        | Lấy tất cả traffic log (initial load) | ❌   |
 | GET    | `/api/signal-history`                      | Lấy tất cả lịch sử tín hiệu          | ❌   |
+| GET    | `/api/signal-configs?intersectionId={id}`  | Lấy cấu hình đèn theo ngã tư         | ❌   |
+| POST   | `/api/signal-configs`                      | Tạo cấu hình đèn cho 1 lane          | ❌   |
+| PUT    | `/api/signal-configs/{id}`                 | Cập nhật thời lượng đèn               | ❌   |
+| DELETE | `/api/signal-configs/{id}`                 | Xoá cấu hình đèn                     | ❌   |
 | WS     | `ws://localhost:8080/traffic-ws`           | Kết nối WebSocket STOMP               | ❌   |
 | SUB    | `/topic/signal`                            | Subscribe nhận tín hiệu đèn real-time | ❌   |
 | SUB    | `/topic/traffic-logs`                      | Subscribe nhận traffic log real-time  | ❌   |

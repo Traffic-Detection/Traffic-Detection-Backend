@@ -23,6 +23,7 @@ public class TrafficAlgorithmServiceImpl implements TrafficAlgorithmService {
     private final TrafficLogRepository trafficLogRepository;
 
     private static final int TOTAL_CYCLE = 80;
+    private static final int DEFAULT_YELLOW_DURATION = 5;
 
     @Override
     public Map<String, Object> calculateAdaptiveSignal(Intersection intersection) {
@@ -147,6 +148,7 @@ public class TrafficAlgorithmServiceImpl implements TrafficAlgorithmService {
                     .intersection(intersection)
                     .lane(lane)
                     .greenDuration(isGreen ? greenDuration : 0) // If RED, green duration is 0 for this snapshot
+                    .yellowDuration(DEFAULT_YELLOW_DURATION)
                     .redDuration(isGreen ? 0 : redDuration)     // Simplified
                     .build());
 
@@ -156,6 +158,7 @@ public class TrafficAlgorithmServiceImpl implements TrafficAlgorithmService {
                     .direction(lane.getDirectionName())
                     .signal(signal)
                     .greenDuration(isGreen ? greenDuration : 0)
+                    .yellowDuration(DEFAULT_YELLOW_DURATION)
                     .redDuration(isGreen ? 0 : redDuration)
                     .remaining(isGreen ? greenDuration : redDuration)
                     .trafficLevel(isGreen ? trafficLevel : getTrafficLevel(laneCongestionMap.get(lane.getId())))

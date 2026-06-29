@@ -11,6 +11,7 @@ public class SignalHistoryResponse {
     private Long intersectionId;
     private Long laneId;
     private Integer greenDuration;
+    private Integer yellowDuration;
     private Integer redDuration;
     private LocalDateTime appliedAt;
 }

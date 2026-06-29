@@ -32,6 +32,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final WebSocketServiceImpl webSocketServiceImpl;
     private final ManualSignalService manualSignalService;
     private final SignalConfigRepository signalConfigRepository;
+    private final ModeSwitchManager modeSwitchManager;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -66,6 +67,17 @@ public class TrafficControlServiceImpl implements TrafficControlService {
             log.info("Mode changed from {} to {} for IntersectionId={}. Invalidating manual cache.",
                     oldMode, newMode, intersectionId);
             manualSignalService.invalidateCache(intersectionId);
+
+            // Khi chuyển MANUAL → AI: phải chờ hết chu kỳ đèn hiện tại
+            if (oldMode == OperatingMode.MANUAL && newMode == OperatingMode.AI) {
+                long cycleDurationMs = calculateManualCycleDurationMs(intersectionId);
+                modeSwitchManager.scheduleAiActivation(intersectionId, cycleDurationMs);
+            }
+
+            // Khi chuyển AI → MANUAL: xoá pending nếu có
+            if (oldMode == OperatingMode.AI && newMode == OperatingMode.MANUAL) {
+                modeSwitchManager.clearPending(intersectionId);
+            }
         }
 
         log.info("Successfully updated operating mode for IntersectionId={} to {}", intersectionId, newMode);
@@ -187,6 +199,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                         .intersectionId(history.getIntersection().getId())
                         .laneId(history.getLane().getId())
                         .greenDuration(history.getGreenDuration())
+                        .yellowDuration(history.getYellowDuration())
                         .redDuration(history.getRedDuration())
                         .appliedAt(history.getAppliedAt())
                         .build())
@@ -218,5 +231,22 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                         .recordedAt(log.getRecordedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Tính tổng thời gian 1 chu kỳ MANUAL (lấy max cycle từ tất cả config của intersection).
+     * Cycle = green + yellow + red (tính bằng milliseconds)
+     */
+    private long calculateManualCycleDurationMs(Long intersectionId) {
+        List<SignalConfig> configs = signalConfigRepository.findByIntersectionId(intersectionId);
+        if (configs.isEmpty()) {
+            return 0;
+        }
+
+        // Lấy chu kỳ dài nhất trong các lane config
+        return configs.stream()
+                .mapToLong(c -> (long) (c.getGreenDuration() + c.getYellowDuration() + c.getRedDuration()) * 1000L)
+                .max()
+                .orElse(0);
     }
 }
