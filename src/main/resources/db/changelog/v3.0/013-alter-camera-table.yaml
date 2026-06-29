@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-alter-camera-table
+      author: huy
+
+      changes:
+
+        - addColumn:
+            tableName: camera_devices
+            columns:
+              - column:
+                  name: camera_code
+                  type: VARCHAR(255)
+              - column:
+                  name: camera_name
+                  type: VARCHAR(255)
+              - column:
+                  name: mac_address
+                  type: VARCHAR(255)
+              - column:
+                  name: serial_number
+                  type: VARCHAR(255)
+              - column:
+                  name: model
+                  type: VARCHAR(255)
+              - column:
+                  name: manufacturer
+                  type: VARCHAR(255)
+              - column:
+                  name: operating_status
+                  type: VARCHAR(255)
+              - column:
+                  name: create_at
+                  type: BIGINT
+              - column:
+                  name: updated_at
+                  type: BIGINT

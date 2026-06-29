@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016-alter-signal-history-table
+      author: huy
+
+      changes:
+        - addColumn:
+            tableName: signal_histories
+            columns:
+              - column:
+                  name: yellow_duration
+                  type: INT
+              - column:
+                  name: apply_at
+                  type: BIGINT

@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-alter-intersection-table
+      author: huy
+
+      changes:
+        - addColumn:
+            tableName: intersections
+            columns:
+              - column:
+                  name: address
+                  type: VARCHAR(255)
+              - column:
+                  name: coordinates
+                  type: JSON
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+              - column:
+                  name: updated_at
+                  type: BIGINT

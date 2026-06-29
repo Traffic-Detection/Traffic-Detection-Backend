@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-create-signal-config-table
+      author: huy
+
+      changes:
+        - createTable:
+            tableName: signal_configs
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: intersection_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lane_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: yellow_duration
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: green_duration
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: red_duration
+                  type: INT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_signal_config_intersection
+            baseTableName: signal_configs
+            baseColumnNames: intersection_id
+            referencedTableName: intersections
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_signal_config_lane
+            baseTableName: signal_configs
+            baseColumnNames: lane_id
+            referencedTableName: lanes
+            referencedColumnNames: id

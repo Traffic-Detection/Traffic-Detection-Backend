@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-alter-lane-table
+      author: huy
+
+      changes:
+
+        - addColumn:
+            tableName: lanes
+            columns:
+              - column:
+                  name: lane_name
+                  type: VARCHAR(255)
+              - column:
+                  name: movement
+                  type: VARCHAR(255)
+              - column:
+                  name: lane_order
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+              - column:
+                  name: created_at
+                  type: BIGINT
+              - column:
+                  name: updated_at
+                  type: BIGINT
