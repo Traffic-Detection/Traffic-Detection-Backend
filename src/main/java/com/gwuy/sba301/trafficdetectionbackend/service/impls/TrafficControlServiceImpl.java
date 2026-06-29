@@ -3,13 +3,12 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
-import com.gwuy.sba301.trafficdetectionbackend.entity.Intersection;
-import com.gwuy.sba301.trafficdetectionbackend.entity.Lane;
-import com.gwuy.sba301.trafficdetectionbackend.entity.SignalHistory;
-import com.gwuy.sba301.trafficdetectionbackend.entity.TrafficLog;
+import com.gwuy.sba301.trafficdetectionbackend.entity.*;
+import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ManualSignalService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +30,8 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final CameraDeviceRepository cameraDeviceRepository;
     private final OperatingModeGuard operatingModeGuard;
     private final WebSocketServiceImpl webSocketServiceImpl;
+    private final ManualSignalService manualSignalService;
+    private final SignalConfigRepository signalConfigRepository;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -39,16 +40,35 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     @Override
     @Transactional
     public IntersectionResponse updateOperatingMode(Long intersectionId, UpdateOperatingModeRequest request) {
+        OperatingMode newMode = request.getOperatingMode();
+
+        if (newMode == OperatingMode.MANUAL) {
+            List<Lane> lanes = laneRepository.findByIntersectionId(intersectionId);
+            List<SignalConfig> configs = signalConfigRepository.findByIntersectionId(intersectionId);
+
+            if (configs.isEmpty() || configs.size() != lanes.size()) {
+                throw new RuntimeException("Lỗi: Chưa thiết lập đủ cấu hình thời lượng đèn (signal_configs) cho tất cả các làn. Không thể chuyển sang chế độ MANUAL!");
+            }
+        }
+
         Intersection intersection = intersectionRepository.findById(intersectionId)
                 .orElseThrow(() -> {
                     log.error("Failed to update mode. IntersectionId={} not found", intersectionId);
                     return new IntersectionNotFoundException(intersectionId);
                 });
 
-        intersection.setOperatingMode(request.getOperatingMode());
+        OperatingMode oldMode = intersection.getOperatingMode();
+
+        intersection.setOperatingMode(newMode);
         intersectionRepository.save(intersection);
 
-        log.info("Successfully updated operating mode for IntersectionId={} to {}", intersectionId, request.getOperatingMode());
+        if (oldMode != newMode) {
+            log.info("Mode changed from {} to {} for IntersectionId={}. Invalidating manual cache.",
+                    oldMode, newMode, intersectionId);
+            manualSignalService.invalidateCache(intersectionId);
+        }
+
+        log.info("Successfully updated operating mode for IntersectionId={} to {}", intersectionId, newMode);
 
         return IntersectionResponse.builder()
                 .id(intersection.getId())
@@ -90,7 +110,6 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         Intersection intersection = intersectionRepository.findById(intersectionId)
                 .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
 
-        // BR-020: Guard — block non-AI_AUTO modes
         if (!operatingModeGuard.isAiProcessingAllowed(intersection)) {
             log.info("Skipping AI signal processing. IntersectionId={} is in {} mode.",
                     intersectionId, intersection.getOperatingMode());
@@ -117,6 +136,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                     .intersection(intersection)
                     .lane(lane)
                     .greenDuration(newGreenDuration)
+                    .yellowDuration(3)
                     .redDuration(newRedDuration)
                     .build();
 

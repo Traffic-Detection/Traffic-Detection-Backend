@@ -39,6 +39,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation ("org.liquibase:liquibase-core")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("me.paulschwarz:spring-dotenv:4.0.0")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

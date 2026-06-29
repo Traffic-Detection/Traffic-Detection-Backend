@@ -13,7 +13,7 @@ public enum OperatingMode {
 
     /**
      * Determines whether AI-based signal processing is permitted in this mode.
-     * Only AI_AUTO allows the scheduler to compute adaptive signals.
+     * Only AI allows the scheduler to compute adaptive signals.
      *
      * @return true if AI processing is allowed, false otherwise
      */

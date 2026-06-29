@@ -16,6 +16,7 @@ public class SignalMessage {
     private String signal; // GREEN, RED
     private Integer greenDuration;
     private Integer redDuration;
+    private Integer yellowDuration;
     private Integer remaining;
     private String trafficLevel; // LOW, MEDIUM, HIGH
 }
