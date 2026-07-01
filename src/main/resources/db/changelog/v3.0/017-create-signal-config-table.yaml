@@ -2,7 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: 017-create-signal-config-table
       author: huy
-
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: signal_configs
       changes:
         - createTable:
             tableName: signal_configs
