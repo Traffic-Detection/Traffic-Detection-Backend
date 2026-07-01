@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,6 +33,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.csrf(AbstractHttpConfigurer::disable)
+                // Cho phép CORS để Frontend port 5173 gọi được sang 8080
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         // 1. PUBLIC: Mở cửa cho Đăng nhập, Đăng ký và kết nối WebSocket
                         .requestMatchers("/auth/login", "/auth/register", "/auth/refresh-token").permitAll()
@@ -60,18 +63,19 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("[DEBUG_LOG] Auth exception: " + authException.getMessage() + " for path: " + request.getServletPath());
-                            response.sendError(401, "Unauthorized");
+                            response.setContentType("application/json");
+                            response.setStatus(401);
+                            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            System.out.println("[DEBUG_LOG] Access denied: " + accessDeniedException.getMessage() + " for path: " + request.getServletPath());
-                            response.sendError(403, "Forbidden");
+                            response.setContentType("application/json");
+                            response.setStatus(403);
+                            response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"" + accessDeniedException.getMessage() + "\"}");
                         })
                 );
 
         return http.build();
     }
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();

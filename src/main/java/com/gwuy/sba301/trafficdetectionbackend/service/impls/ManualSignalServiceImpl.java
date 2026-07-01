@@ -46,7 +46,7 @@ public class ManualSignalServiceImpl implements ManualSignalService {
                     .intersectionId(config.getIntersection().getId())
                     .laneId(config.getLane().getId())
                     .direction(config.getLane().getDirectionName())
-                    .signal("FIXED")
+                    .signal("RED")
                     .greenDuration(config.getGreenDuration())
                     .yellowDuration(config.getYellowDuration()) // Ánh xạ dữ liệu đèn vàng
                     .redDuration(config.getRedDuration())

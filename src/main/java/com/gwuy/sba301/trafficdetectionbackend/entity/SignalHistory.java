@@ -41,7 +41,4 @@ public class SignalHistory {
     @Column(name = "applied_at", updatable = false)
     @CreationTimestamp
     LocalDateTime appliedAt;
-
-    @Column(name = "apply_at")
-    Long applyAt;
 }
