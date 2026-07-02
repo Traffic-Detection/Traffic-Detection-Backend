@@ -5,6 +5,7 @@ import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRe
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
 import com.gwuy.sba301.trafficdetectionbackend.entity.*;
 import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
+import com.gwuy.sba301.trafficdetectionbackend.enums.CameraStatus;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
@@ -12,8 +13,10 @@ import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ManualSignalSe
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,44 +46,64 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     public IntersectionResponse updateOperatingMode(Long intersectionId, UpdateOperatingModeRequest request) {
         OperatingMode newMode = request.getOperatingMode();
 
+        // 1. Lấy thông tin ngã tư ngay từ đầu
+        Intersection intersection = intersectionRepository.findById(intersectionId)
+                .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
+
+        List<Lane> lanes = laneRepository.findByIntersectionId(intersectionId);
+
+        // LOGIC 1: Đổi sang MANUAL -> Nếu thiếu Config, TỰ ĐỘNG TẠO MẶC ĐỊNH thay vì báo lỗi
         if (newMode == OperatingMode.MANUAL) {
-            List<Lane> lanes = laneRepository.findByIntersectionId(intersectionId);
             List<SignalConfig> configs = signalConfigRepository.findByIntersectionId(intersectionId);
 
-            if (configs.isEmpty() || configs.size() != lanes.size()) {
-                throw new RuntimeException("Lỗi: Chưa thiết lập đủ cấu hình thời lượng đèn (signal_configs) cho tất cả các làn. Không thể chuyển sang chế độ MANUAL!");
+            if (configs.size() != lanes.size()) {
+                log.info("Ngã tư {} thiếu cấu hình. Hệ thống tự động sinh cấu hình mặc định cho {} làn", intersectionId, lanes.size());
+                if (!configs.isEmpty()) {
+                    signalConfigRepository.deleteAll(configs);
+                }
+                for (Lane lane : lanes) {
+                    SignalConfig defaultConfig = SignalConfig.builder()
+                            .intersection(intersection)
+                            .lane(lane)
+                            .greenDuration(40)
+                            .yellowDuration(5)
+                            .redDuration(40) // Phù hợp tổng chu kỳ mặc định 85s
+                            .build();
+                    signalConfigRepository.save(defaultConfig);
+                }
             }
         }
 
-        Intersection intersection = intersectionRepository.findById(intersectionId)
-                .orElseThrow(() -> {
-                    log.error("Failed to update mode. IntersectionId={} not found", intersectionId);
-                    return new IntersectionNotFoundException(intersectionId);
-                });
+        // LOGIC 2: Đổi sang AI -> Bắt buộc phải có đủ 4 Camera ACTIVE
+        if (newMode == OperatingMode.AI) {
+            long activeCameraCount = cameraDeviceRepository.findAll().stream()
+                    .filter(c -> c.getLane() != null && c.getLane().getIntersection().getId().equals(intersectionId))
+                    .filter(c -> c.getStatus() == CameraStatus.ONLINE)
+                    .count();
+
+            if (activeCameraCount < 4) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Không đủ 4 camera hoạt động (ACTIVE) tại ngã tư này (Hiện có: " + activeCameraCount + "/4). Không thể kích hoạt AI Adaptive!");
+            }
+        }
 
         OperatingMode oldMode = intersection.getOperatingMode();
-
         intersection.setOperatingMode(newMode);
         intersectionRepository.save(intersection);
 
         if (oldMode != newMode) {
-            log.info("Mode changed from {} to {} for IntersectionId={}. Invalidating manual cache.",
-                    oldMode, newMode, intersectionId);
+            log.info("Mode changed from {} to {} for IntersectionId={}", oldMode, newMode, intersectionId);
             manualSignalService.invalidateCache(intersectionId);
 
-            // Khi chuyển MANUAL → AI: phải chờ hết chu kỳ đèn hiện tại
             if (oldMode == OperatingMode.MANUAL && newMode == OperatingMode.AI) {
                 long cycleDurationMs = calculateManualCycleDurationMs(intersectionId);
                 modeSwitchManager.scheduleAiActivation(intersectionId, cycleDurationMs);
             }
 
-            // Khi chuyển AI → MANUAL: xoá pending nếu có
             if (oldMode == OperatingMode.AI && newMode == OperatingMode.MANUAL) {
                 modeSwitchManager.clearPending(intersectionId);
             }
         }
-
-        log.info("Successfully updated operating mode for IntersectionId={} to {}", intersectionId, newMode);
 
         return IntersectionResponse.builder()
                 .id(intersection.getId())
@@ -105,7 +128,6 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         trafficLogRepository.save(trafficLog);
         log.info("Recorded traffic log for LaneId={}. Congestion: {}%", request.getLaneId(), request.getCongestionLevel());
 
-        // Broadcast new log to WebSocket subscribers via /topic/traffic-logs
         TrafficLogResponse response = TrafficLogResponse.builder()
                 .id(trafficLog.getId())
                 .laneId(trafficLog.getLane().getId())
@@ -131,19 +153,16 @@ public class TrafficControlServiceImpl implements TrafficControlService {
         List<Lane> lanes = laneRepository.findByIntersectionId(intersectionId);
 
         for (Lane lane : lanes) {
-            // Lấy độ kẹt xe mới nhất của làn hiện tại
             double currentCongestion = getLatestCongestionLevel(lane.getId());
 
             int newGreenDuration = BASE_GREEN_TIME;
             int newRedDuration = BASE_GREEN_TIME;
 
-            // Logic AI cơ bản: Tự động kéo dài đèn xanh nếu kẹt cứng
             if (currentCongestion >= HIGH_CONGESTION_THRESHOLD) {
                 newGreenDuration = Math.min(BASE_GREEN_TIME + 20, MAX_GREEN_TIME);
                 log.info("High congestion detected on LaneId={}. Extending green light to {}s", lane.getId(), newGreenDuration);
             }
 
-            // Lưu lịch sử thay đổi đèn
             SignalHistory signalHistory = SignalHistory.builder()
                     .intersection(intersection)
                     .lane(lane)
@@ -233,17 +252,12 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Tính tổng thời gian 1 chu kỳ MANUAL (lấy max cycle từ tất cả config của intersection).
-     * Cycle = green + yellow + red (tính bằng milliseconds)
-     */
     private long calculateManualCycleDurationMs(Long intersectionId) {
         List<SignalConfig> configs = signalConfigRepository.findByIntersectionId(intersectionId);
         if (configs.isEmpty()) {
             return 0;
         }
 
-        // Lấy chu kỳ dài nhất trong các lane config
         return configs.stream()
                 .mapToLong(c -> (long) (c.getGreenDuration() + c.getYellowDuration() + c.getRedDuration()) * 1000L)
                 .max()

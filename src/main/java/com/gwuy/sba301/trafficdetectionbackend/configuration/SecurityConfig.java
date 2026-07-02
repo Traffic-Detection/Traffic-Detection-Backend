@@ -36,6 +36,7 @@ public class SecurityConfig {
                 // Cho phép CORS để Frontend port 5173 gọi được sang 8080
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 1. PUBLIC: Mở cửa cho Đăng nhập, Đăng ký và kết nối WebSocket
                         .requestMatchers("/auth/login", "/auth/register", "/auth/refresh-token").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/traffic-ws/**").permitAll()

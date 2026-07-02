@@ -10,7 +10,7 @@ description = "Traffic-Detection-Backend"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 repositories {
