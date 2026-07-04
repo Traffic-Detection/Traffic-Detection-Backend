@@ -936,7 +936,7 @@ stompClient.connect({}, () => {
 ### CameraStatus
 
 | Giá trị       | Mô tả                  |
-| ------------- | ---------------------- |
+|---------------|------------------------|
 | `ONLINE`      | Camera đang hoạt động  |
 | `OFFLINE`     | Camera ngừng hoạt động |
 | `MAINTENANCE` | Camera đang bảo trì    |
@@ -957,7 +957,7 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 ```
 
 | Field       | Type          | Mô tả                |
-| ----------- | ------------- | -------------------- |
+|-------------|---------------|----------------------|
 | `timestamp` | LocalDateTime | Thời điểm xảy ra lỗi |
 | `status`    | Integer       | HTTP status code     |
 | `error`     | String        | Tên loại lỗi HTTP    |
@@ -966,7 +966,7 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 ### Bảng tổng hợp mã lỗi
 
 | HTTP Code | Error                 | Nguyên nhân                                                                         |
-| --------- | --------------------- | ----------------------------------------------------------------------------------- |
+|-----------|-----------------------|-------------------------------------------------------------------------------------|
 | 400       | Bad Request           | Validation thất bại, RuntimeException chưa được phân loại                           |
 | 404       | Not Found             | `IntersectionNotFoundException`, `LaneNotFoundException`                            |
 | 409       | Conflict              | `DuplicateIntersectionException`, `DataIntegrityViolationException` (trùng dữ liệu) |
@@ -976,25 +976,25 @@ Tất cả lỗi đều trả về cùng một cấu trúc JSON do `GlobalExcept
 
 ## Quick Reference
 
-| Method | Endpoint                                   | Mô tả                                | Auth |
-| ------ | ------------------------------------------ | ------------------------------------ | ---- |
-| POST   | `/auth/register`                           | Đăng ký tài khoản                    | ❌   |
-| POST   | `/auth/login`                              | Đăng nhập                            | ❌   |
-| POST   | `/auth/refresh-token`                      | Làm mới token                        | ❌   |
-| GET    | `/api/intersections`                       | Lấy danh sách nút giao               | ❌   |
-| PUT    | `/api/intersections/{id}/operating-mode`   | Chuyển chế độ AI/MANUAL              | ❌   |
-| POST   | `/api/intersections/{id}/adaptive-signals` | Trigger AI xử lý tín hiệu (test)     | ❌   |
-| GET    | `/api/intersections/{id}/lanes`            | Lấy danh sách làn đường              | ❌   |
-| GET    | `/api/intersections/{id}/signal-history`   | Lấy lịch sử tín hiệu của nút giao    | ❌   |
-| GET    | `/api/cameras`                             | Lấy danh sách camera                 | ❌   |
-| POST   | `/api/traffic-logs`                        | Ghi log mật độ phương tiện + broadcast WS | ❌   |
-| GET    | `/api/traffic-logs`                        | Lấy tất cả traffic log (initial load) | ❌   |
-| GET    | `/api/signal-history`                      | Lấy tất cả lịch sử tín hiệu          | ❌   |
-| GET    | `/api/signal-configs?intersectionId={id}`  | Lấy cấu hình đèn theo ngã tư         | ❌   |
-| POST   | `/api/signal-configs`                      | Tạo cấu hình đèn cho 1 lane          | ❌   |
-| PUT    | `/api/signal-configs/{id}`                 | Cập nhật thời lượng đèn               | ❌   |
-| DELETE | `/api/signal-configs/{id}`                 | Xoá cấu hình đèn                     | ❌   |
-| WS     | `ws://localhost:8080/traffic-ws`           | Kết nối WebSocket STOMP               | ❌   |
-| SUB    | `/topic/signal`                            | Subscribe nhận tín hiệu đèn real-time | ❌   |
-| SUB    | `/topic/traffic-logs`                      | Subscribe nhận traffic log real-time  | ❌   |
-| SEND   | `/app/traffic-logs`                        | Request snapshot toàn bộ traffic logs | ❌   |
+| Method | Endpoint                                   | Mô tả                                     | Auth |
+|--------|--------------------------------------------|-------------------------------------------|------|
+| POST   | `/auth/register`                           | Đăng ký tài khoản                         | ❌    |
+| POST   | `/auth/login`                              | Đăng nhập                                 | ❌    |
+| POST   | `/auth/refresh-token`                      | Làm mới token                             | ❌    |
+| GET    | `/api/intersections`                       | Lấy danh sách nút giao                    | ❌    |
+| PUT    | `/api/intersections/{id}/operating-mode`   | Chuyển chế độ AI/MANUAL                   | ❌    |
+| POST   | `/api/intersections/{id}/adaptive-signals` | Trigger AI xử lý tín hiệu (test)          | ❌    |
+| GET    | `/api/intersections/{id}/lanes`            | Lấy danh sách làn đường                   | ❌    |
+| GET    | `/api/intersections/{id}/signal-history`   | Lấy lịch sử tín hiệu của nút giao         | ❌    |
+| GET    | `/api/cameras`                             | Lấy danh sách camera                      | ❌    |
+| POST   | `/api/traffic-logs`                        | Ghi log mật độ phương tiện + broadcast WS | ❌    |
+| GET    | `/api/traffic-logs`                        | Lấy tất cả traffic log (initial load)     | ❌    |
+| GET    | `/api/signal-history`                      | Lấy tất cả lịch sử tín hiệu               | ❌    |
+| GET    | `/api/signal-configs?intersectionId={id}`  | Lấy cấu hình đèn theo ngã tư              | ❌    |
+| POST   | `/api/signal-configs`                      | Tạo cấu hình đèn cho 1 lane               | ❌    |
+| PUT    | `/api/signal-configs/{id}`                 | Cập nhật thời lượng đèn                   | ❌    |
+| DELETE | `/api/signal-configs/{id}`                 | Xoá cấu hình đèn                          | ❌    |
+| WS     | `ws://localhost:8080/traffic-ws`           | Kết nối WebSocket STOMP                   | ❌    |
+| SUB    | `/topic/signal`                            | Subscribe nhận tín hiệu đèn real-time     | ❌    |
+| SUB    | `/topic/traffic-logs`                      | Subscribe nhận traffic log real-time      | ❌    |
+| SEND   | `/app/traffic-logs`                        | Request snapshot toàn bộ traffic logs     | ❌    |

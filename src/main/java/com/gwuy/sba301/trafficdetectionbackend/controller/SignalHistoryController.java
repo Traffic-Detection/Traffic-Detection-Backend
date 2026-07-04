@@ -23,7 +23,7 @@ public class SignalHistoryController {
     private final SignalHistoryService signalHistoryService;
 
     @Operation(summary = "Get all signal history")
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<List<SignalHistoryResponse>> getAllSignalHistory() {
         return ResponseEntity.ok(signalHistoryService.getAllSignalHistory());
     }

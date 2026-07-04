@@ -33,14 +33,14 @@ public class TrafficLogController {
             @ApiResponse(responseCode = "404", description = "Lane not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping
+    @PostMapping("/record-trafic")
     public ResponseEntity<Void> recordTrafficLog(@Valid @RequestBody TrafficLogRequest request) {
         trafficControlService.recordTrafficLog(request);
         return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Get all traffic logs (REST - use for initial load; subscribe WebSocket /topic/traffic-logs for real-time updates)")
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<List<TrafficLogResponse>> getAllTrafficLogs() {
         return ResponseEntity.ok(trafficControlService.getAllTrafficLogs());
     }

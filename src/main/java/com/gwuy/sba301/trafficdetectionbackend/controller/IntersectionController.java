@@ -47,7 +47,7 @@ public class IntersectionController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/{id}/adaptive-signals")
-    public ResponseEntity<Void> processAdaptiveSignals(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> processAdaptiveSignals(@PathVariable Long id) {
 
         trafficControlService.processAdaptiveSignals(id);
         return ResponseEntity.ok().build();

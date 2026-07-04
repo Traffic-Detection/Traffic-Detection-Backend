@@ -23,7 +23,7 @@ public class CameraController {
     private final TrafficControlService trafficControlService;
 
     @Operation(summary = "Get list of all cameras")
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<List<CameraResponse>> getAllCameras() {
         return ResponseEntity.ok(trafficControlService.getAllCameras());
     }

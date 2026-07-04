@@ -22,25 +22,25 @@ public class SignalConfigController {
     private final SignalConfigService signalConfigService;
 
     @Operation(summary = "Lấy danh sách cấu hình đèn theo ngã tư")
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<List<SignalConfigResponse>> getConfigs(@RequestParam Long intersectionId) {
         return ResponseEntity.ok(signalConfigService.getConfigsByIntersection(intersectionId));
     }
 
     @Operation(summary = "Tạo cấu hình đèn mới cho một làn đường")
-    @PostMapping
+    @PostMapping("/create-config")
     public ResponseEntity<SignalConfigResponse> createConfig(@Valid @RequestBody SignalConfigRequest request) {
         return ResponseEntity.ok(signalConfigService.createConfig(request));
     }
 
     @Operation(summary = "Cập nhật thời lượng đèn")
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<SignalConfigResponse> updateConfig(@PathVariable Long id, @Valid @RequestBody SignalConfigRequest request) {
         return ResponseEntity.ok(signalConfigService.updateConfig(id, request));
     }
 
     @Operation(summary = "Xoá cấu hình đèn")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteConfig(@PathVariable Long id) {
         signalConfigService.deleteConfig(id);
         return ResponseEntity.ok().build();
