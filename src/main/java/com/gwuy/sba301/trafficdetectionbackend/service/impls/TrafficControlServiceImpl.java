@@ -2,6 +2,9 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.IntersectionCreateRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.LaneCreateRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.CameraCreateRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
 import com.gwuy.sba301.trafficdetectionbackend.entity.*;
 import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
@@ -262,5 +265,84 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .mapToLong(c -> (long) (c.getGreenDuration() + c.getYellowDuration() + c.getRedDuration()) * 1000L)
                 .max()
                 .orElse(0);
+    }
+
+    @Override
+    @Transactional
+    public IntersectionResponse createIntersection(IntersectionCreateRequest request) {
+        String coordinates = String.format("{\"lat\": %s, \"lng\": %s}", request.getLat(), request.getLng());
+        Intersection intersection = Intersection.builder()
+                .name(request.getName())
+                .address(request.getAddress())
+                .coordinates(coordinates)
+                .operatingMode(request.getOperatingMode() != null ? request.getOperatingMode() : OperatingMode.MANUAL)
+                .status(request.getStatus() != null ? request.getStatus() : com.gwuy.sba301.trafficdetectionbackend.enums.IntersectionStatus.ACTIVE)
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        intersection = intersectionRepository.save(intersection);
+        log.info("Created new Intersection: {}", intersection.getName());
+
+        return IntersectionResponse.builder()
+                .id(intersection.getId())
+                .name(intersection.getName())
+                .operatingMode(intersection.getOperatingMode())
+                .createdAt(intersection.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public LaneResponse createLane(Long intersectionId, LaneCreateRequest request) {
+        Intersection intersection = intersectionRepository.findById(intersectionId)
+                .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
+
+        Lane lane = Lane.builder()
+                .intersection(intersection)
+                .laneName(request.getLaneName())
+                .directionName(request.getDirectionName())
+                .movement(request.getMovement())
+                .laneOrder(request.getLaneOrder())
+                .status(request.getStatus() != null ? request.getStatus() : com.gwuy.sba301.trafficdetectionbackend.enums.LaneStatus.ACTIVE)
+                .createdAt(System.currentTimeMillis())
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        lane = laneRepository.save(lane);
+        log.info("Created new Lane '{}' for Intersection ID: {}", lane.getDirectionName(), intersectionId);
+
+        return LaneResponse.builder()
+                .id(lane.getId())
+                .directionName(lane.getDirectionName())
+                .intersectionId(intersectionId)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public CameraResponse createCamera(Long laneId, CameraCreateRequest request) {
+        Lane lane = laneRepository.findById(laneId)
+                .orElseThrow(() -> new LaneNotFoundException(laneId));
+
+        CameraDevice camera = CameraDevice.builder()
+                .lane(lane)
+                .cameraName(request.getCameraName())
+                .ipAddress(request.getIpAddress())
+                .macAddress(request.getMacAddress())
+                .serialNumber(request.getSerialNumber())
+                .status(request.getStatus() != null ? request.getStatus() : CameraStatus.ONLINE)
+                .createAt(System.currentTimeMillis())
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        camera = cameraDeviceRepository.save(camera);
+        log.info("Created new Camera '{}' for Lane ID: {}", camera.getIpAddress(), laneId);
+
+        return CameraResponse.builder()
+                .id(camera.getId())
+                .ipAddress(camera.getIpAddress())
+                .status(camera.getStatus())
+                .laneId(laneId)
+                .build();
     }
 }

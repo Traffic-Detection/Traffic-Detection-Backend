@@ -53,6 +53,15 @@ public class SecurityConfig {
                         // 4. VIEWER: Mọi tài khoản đăng nhập đều có quyền GET (xem dữ liệu báo cáo)
                         .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
 
+                        // 5. ROUTE RECOMMENDATION: Authenticated users can request route recommendations
+                        .requestMatchers(HttpMethod.POST, "/api/routes/**").authenticated()
+
+                        // 6. SIMULATION: Admin and Operator can start/stop simulation
+                        .requestMatchers(HttpMethod.POST, "/api/simulation/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERATOR")
+
+                        // 7. SETUP ENTITIES: Admin only (Create Intersection, Lane, Camera)
+                        .requestMatchers(HttpMethod.POST, "/api/intersections", "/api/intersections/*/lanes", "/api/lanes/*/cameras").hasAuthority("ROLE_ADMIN")
+
                         // Khoá tất cả các API còn lại
                         .anyRequest().authenticated()
                 )
