@@ -46,3 +46,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/v3.0/017-create-signal-config-table.yaml
+
+  - include:
+      file: db/changelog/v3.0/018-update-operating-mode-auto-to-ai.yaml
