@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-add-frame-url-to-traffic-logs
+      author: huy
+
+      changes:
+
+        - addColumn:
+            tableName: traffic_logs
+            columns:
+              - column:
+                  name: frame_url
+                  type: VARCHAR(500)

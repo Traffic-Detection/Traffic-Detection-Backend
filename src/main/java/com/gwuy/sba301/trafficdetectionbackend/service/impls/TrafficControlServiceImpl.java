@@ -9,6 +9,7 @@ import com.gwuy.sba301.trafficdetectionbackend.enums.CameraStatus;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ImageStorageService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ManualSignalService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,6 +39,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final ManualSignalService manualSignalService;
     private final SignalConfigRepository signalConfigRepository;
     private final ModeSwitchManager modeSwitchManager;
+    private final Optional<ImageStorageService> imageStorageService;
 
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
@@ -115,14 +119,19 @@ public class TrafficControlServiceImpl implements TrafficControlService {
 
     @Override
     @Transactional
-    public void recordTrafficLog(TrafficLogRequest request) {
+    public void recordTrafficLog(TrafficLogRequest request, MultipartFile image) {
         Lane lane = laneRepository.findById(request.getLaneId())
                 .orElseThrow(() -> new LaneNotFoundException(request.getLaneId()));
+
+        ImageStorageService storage = imageStorageService
+                .orElseThrow(() -> new RuntimeException("Image storage service is not configured"));
+        String frameUrl = storage.upload(image);
 
         TrafficLog trafficLog = TrafficLog.builder()
                 .lane(lane)
                 .vehicleCount(request.getVehicleCount())
                 .congestionLevel(request.getCongestionLevel())
+                .frameUrl(frameUrl)
                 .build();
 
         trafficLogRepository.save(trafficLog);
@@ -133,6 +142,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .laneId(trafficLog.getLane().getId())
                 .vehicleCount(trafficLog.getVehicleCount())
                 .congestionLevel(trafficLog.getCongestionLevel())
+                .frameUrl(trafficLog.getFrameUrl())
                 .recordedAt(trafficLog.getRecordedAt())
                 .build();
         webSocketServiceImpl.sendTrafficLog(response);
@@ -247,6 +257,7 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                         .laneId(log.getLane().getId())
                         .vehicleCount(log.getVehicleCount())
                         .congestionLevel(log.getCongestionLevel())
+                        .frameUrl(log.getFrameUrl())
                         .recordedAt(log.getRecordedAt())
                         .build())
                 .collect(Collectors.toList());
