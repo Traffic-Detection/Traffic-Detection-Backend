@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-create-road-segments-table
+      author: huy
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: road_segments
+      changes:
+        - createTable:
+            tableName: road_segments
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: road_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_intersection_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_intersection_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: distance
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: speed_limit
+                  type: INT
+                  defaultValueNumeric: 50
+              - column:
+                  name: osm_way_id
+                  type: BIGINT
+              - column:
+                  name: traffic_level
+                  type: VARCHAR(20)
+                  defaultValue: LOW
+                  constraints:
+                    nullable: false
+              - column:
+                  name: traffic_cost
+                  type: DOUBLE
+                  defaultValueNumeric: 0.0
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: ACTIVE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - addForeignKeyConstraint:
+            constraintName: fk_road_segment_from_intersection
+            baseTableName: road_segments
+            baseColumnNames: from_intersection_id
+            referencedTableName: intersections
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            constraintName: fk_road_segment_to_intersection
+            baseTableName: road_segments
+            baseColumnNames: to_intersection_id
+            referencedTableName: intersections
+            referencedColumnNames: id

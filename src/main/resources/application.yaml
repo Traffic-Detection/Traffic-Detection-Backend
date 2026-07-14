@@ -25,3 +25,6 @@ logging:
         boot:
           context:
             config=DEBUG: debug
+
+osrm:
+  base-url: https://router.project-osrm.org

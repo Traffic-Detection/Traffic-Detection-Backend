@@ -1,6 +1,8 @@
 package com.gwuy.sba301.trafficdetectionbackend.controller;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.IntersectionCreateRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.LaneCreateRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
@@ -74,5 +76,27 @@ public class IntersectionController {
     @GetMapping("/{id}/signal-history")
     public ResponseEntity<List<SignalHistoryResponse>> getSignalHistory(@PathVariable Long id) {
         return ResponseEntity.ok(trafficControlService.getSignalHistoryByIntersection(id));
+    }
+
+    @Operation(summary = "Create a new intersection")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Intersection created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body")
+    })
+    @PostMapping
+    public ResponseEntity<IntersectionResponse> createIntersection(@RequestBody IntersectionCreateRequest request) {
+        IntersectionResponse response = trafficControlService.createIntersection(request);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Create a new lane for an intersection")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Lane created successfully"),
+            @ApiResponse(responseCode = "404", description = "Intersection not found")
+    })
+    @PostMapping("/{id}/lanes")
+    public ResponseEntity<LaneResponse> createLane(@PathVariable Long id, @RequestBody LaneCreateRequest request) {
+        LaneResponse response = trafficControlService.createLane(id, request);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(response);
     }
 }

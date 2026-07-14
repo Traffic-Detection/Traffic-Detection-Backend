@@ -48,4 +48,7 @@ databaseChangeLog:
       file: db/changelog/v3.0/017-create-signal-config-table.yaml
 
   - include:
-      file: db/changelog/v3.0/018-update-operating-mode-auto-to-ai.yaml
+      file: db/changelog/v4.0/018-create-road-segments-table.yaml
+
+  - include:
+      file: db/changelog/v4.0/019-create-route-histories-table.yaml
