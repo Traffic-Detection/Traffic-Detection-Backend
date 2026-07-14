@@ -22,4 +22,5 @@ public class IntersectionTrafficResponse {
     private String coordinates;
     private String trafficLevel;
     private Integer vehicleCount;
+    private String operatingMode;
 }

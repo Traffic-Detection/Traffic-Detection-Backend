@@ -40,6 +40,18 @@ public class SecurityConfig {
                         // 1. PUBLIC: Mở cửa cho Đăng nhập, Đăng ký và kết nối WebSocket
                         .requestMatchers("/auth/login", "/auth/register", "/auth/refresh-token").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/traffic-ws/**").permitAll()
+                        .requestMatchers(
+                                "/api/cameras/**",
+                                "/api/roads/**",
+                                "/api/dashboard/**",
+                                "/api/traffic/**",
+                                "/api/route/**",
+                                "/api/simulate/**",
+                                "/api/traffic-logs",
+                                "/api/traffic/current",
+                                "/api/routes/**",
+                                "/error"
+                        ).permitAll()
 
                         // 2. CAMERA AI: Chỉ dành riêng cho thiết bị phần cứng đẩy dữ liệu kẹt xe lên
                         .requestMatchers(HttpMethod.POST, "/api/traffic-logs").hasAuthority("ROLE_CAMERA")
