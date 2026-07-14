@@ -34,7 +34,6 @@ public class TrafficLog {
     @Column(name = "frame_url")
     String frameUrl;
 
-    @Column(name = "recorded_at", updatable = false)
-    @CreationTimestamp
-    LocalDateTime recordedAt;
+    @Column(name = "recorded_at", updatable = false, nullable = false)
+    private LocalDateTime recordedAt;
 }
