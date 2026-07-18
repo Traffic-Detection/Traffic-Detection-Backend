@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-update-operating-mode-auto-to-ai
+      author: huy
+      changes:
+        - update:
+            tableName: intersections
+            columns:
+              - column:
+                  name: operating_mode
+                  value: 'AI'
+            where: "operating_mode = 'AUTO'"

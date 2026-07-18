@@ -20,4 +20,10 @@ public interface TrafficControlService {
     List<SignalHistoryResponse> getSignalHistoryByIntersection(Long intersectionId);
     List<CameraResponse> getAllCameras();
     List<TrafficLogResponse> getAllTrafficLogs();
+
+    IntersectionResponse createIntersection(IntersectionCreateRequest request);
+    LaneResponse createLane(Long intersectionId, LaneCreateRequest request);
+    CameraResponse createCamera(Long laneId, CameraCreateRequest request);
+
+    CurrentTrafficResponse getCurrentTraffic();
 }

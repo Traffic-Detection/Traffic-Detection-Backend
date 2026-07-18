@@ -15,7 +15,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({IntersectionNotFoundException.class, LaneNotFoundException.class})
+    @ExceptionHandler({IntersectionNotFoundException.class, LaneNotFoundException.class,
+            RouteNotFoundException.class, RoadSegmentNotFoundException.class})
     public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
         log.error("Resource not found: {}", ex.getMessage());
 
@@ -50,6 +51,19 @@ public class GlobalExceptionHandler {
         body.put("message", "Intersection already exists");
 
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(OsrmServiceException.class)
+    public ResponseEntity<Map<String, Object>> handleOsrmServiceException(OsrmServiceException ex) {
+        log.error("OSRM service error: {}", ex.getMessage());
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_GATEWAY.value());
+        body.put("error", "Bad Gateway");
+        body.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_GATEWAY);
     }
 
     @ExceptionHandler(RuntimeException.class)

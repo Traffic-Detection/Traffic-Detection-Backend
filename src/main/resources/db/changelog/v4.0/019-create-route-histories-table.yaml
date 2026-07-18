@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-create-route-histories-table
+      author: huy
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: route_histories
+      changes:
+        - createTable:
+            tableName: route_histories
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: start_lat
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_lng
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_lat
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_lng
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: selected_route_index
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_routes
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_score
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_distance
+                  type: DOUBLE
+              - column:
+                  name: total_duration
+                  type: DOUBLE
+              - column:
+                  name: route_geometry
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP

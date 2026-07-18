@@ -2,15 +2,20 @@ package com.gwuy.sba301.trafficdetectionbackend.service.impls;
 
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.IntersectionCreateRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.LaneCreateRequest;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.CameraCreateRequest;
 import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
 import com.gwuy.sba301.trafficdetectionbackend.entity.*;
 import com.gwuy.sba301.trafficdetectionbackend.enums.OperatingMode;
 import com.gwuy.sba301.trafficdetectionbackend.enums.CameraStatus;
+import com.gwuy.sba301.trafficdetectionbackend.enums.TrafficLevel;
 import com.gwuy.sba301.trafficdetectionbackend.exception.IntersectionNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.exception.LaneNotFoundException;
 import com.gwuy.sba301.trafficdetectionbackend.repository.*;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ImageStorageService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.ManualSignalService;
+import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.RoadSegmentService;
 import com.gwuy.sba301.trafficdetectionbackend.service.interfaces.TrafficControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +48,9 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     private final ModeSwitchManager modeSwitchManager;
     private final Optional<ImageStorageService> imageStorageService;
 
+    // Thêm Dependency để nhuộm màu đoạn đường nối
+    private final RoadSegmentService roadSegmentService;
+
     private static final int BASE_GREEN_TIME = 30; // Giây
     private static final int MAX_GREEN_TIME = 60; // Giây
     private static final double HIGH_CONGESTION_THRESHOLD = 75.0; // %
@@ -52,13 +60,11 @@ public class TrafficControlServiceImpl implements TrafficControlService {
     public IntersectionResponse updateOperatingMode(Long intersectionId, UpdateOperatingModeRequest request) {
         OperatingMode newMode = request.getOperatingMode();
 
-        // 1. Lấy thông tin ngã tư ngay từ đầu
         Intersection intersection = intersectionRepository.findById(intersectionId)
                 .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
 
         List<Lane> lanes = laneRepository.findByIntersectionId(intersectionId);
 
-        // LOGIC 1: Đổi sang MANUAL -> Nếu thiếu Config, TỰ ĐỘNG TẠO MẶC ĐỊNH thay vì báo lỗi
         if (newMode == OperatingMode.MANUAL) {
             List<SignalConfig> configs = signalConfigRepository.findByIntersectionId(intersectionId);
 
@@ -73,14 +79,13 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                             .lane(lane)
                             .greenDuration(40)
                             .yellowDuration(5)
-                            .redDuration(40) // Phù hợp tổng chu kỳ mặc định 85s
+                            .redDuration(40)
                             .build();
                     signalConfigRepository.save(defaultConfig);
                 }
             }
         }
 
-        // LOGIC 2: Đổi sang AI -> Bắt buộc phải có đủ 4 Camera ACTIVE
         if (newMode == OperatingMode.AI) {
             long activeCameraCount = cameraDeviceRepository.findAll().stream()
                     .filter(c -> c.getLane() != null && c.getLane().getIntersection().getId().equals(intersectionId))
@@ -138,6 +143,27 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .build();
 
         trafficLogRepository.save(trafficLog);
+
+        // ===============================================================================
+        // TỰ ĐỘNG NHUỘM MÀU ĐOẠN ĐƯỜNG MỖI KHI CÓ DATA TỪ YOLOv8
+        // Dựa trên Tỷ lệ % kẹt xe (Congestion Level)
+        // ===============================================================================
+        TrafficLevel newLevel = TrafficLevel.LOW;
+        if (request.getCongestionLevel() > 60.0) {
+            newLevel = TrafficLevel.HIGH;
+        } else if (request.getCongestionLevel() > 30.0) {
+            newLevel = TrafficLevel.MEDIUM;
+        }
+
+        Long intersectionId = lane.getIntersection().getId();
+        List<RoadSegmentResponse> connectedRoads = roadSegmentService.getRoadSegmentsByIntersection(intersectionId);
+
+        for (RoadSegmentResponse road : connectedRoads) {
+            // Cập nhật trạng thái mới nhất cho các đoạn đường dính tới ngã tư này
+            roadSegmentService.updateTrafficLevel(road.getId(), newLevel);
+        }
+        // ===============================================================================
+
         log.info("Recorded traffic log for LaneId={}. Congestion: {}%", request.getLaneId(), request.getCongestionLevel());
 
         TrafficLogResponse response = TrafficLogResponse.builder()
@@ -276,5 +302,134 @@ public class TrafficControlServiceImpl implements TrafficControlService {
                 .mapToLong(c -> (long) (c.getGreenDuration() + c.getYellowDuration() + c.getRedDuration()) * 1000L)
                 .max()
                 .orElse(0);
+    }
+
+    @Override
+    @Transactional
+    public IntersectionResponse createIntersection(IntersectionCreateRequest request) {
+        String coordinates = String.format("{\"lat\": %s, \"lng\": %s}", request.getLat(), request.getLng());
+        Intersection intersection = Intersection.builder()
+                .name(request.getName())
+                .address(request.getAddress())
+                .coordinates(coordinates)
+                .operatingMode(request.getOperatingMode() != null ? request.getOperatingMode() : OperatingMode.MANUAL)
+                .status(request.getStatus() != null ? request.getStatus() : com.gwuy.sba301.trafficdetectionbackend.enums.IntersectionStatus.ACTIVE)
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        intersection = intersectionRepository.save(intersection);
+        log.info("Created new Intersection: {}", intersection.getName());
+
+        return IntersectionResponse.builder()
+                .id(intersection.getId())
+                .name(intersection.getName())
+                .operatingMode(intersection.getOperatingMode())
+                .createdAt(intersection.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public LaneResponse createLane(Long intersectionId, LaneCreateRequest request) {
+        Intersection intersection = intersectionRepository.findById(intersectionId)
+                .orElseThrow(() -> new IntersectionNotFoundException(intersectionId));
+
+        Lane lane = Lane.builder()
+                .intersection(intersection)
+                .laneName(request.getLaneName())
+                .directionName(request.getDirectionName())
+                .movement(request.getMovement())
+                .laneOrder(request.getLaneOrder())
+                .status(request.getStatus() != null ? request.getStatus() : com.gwuy.sba301.trafficdetectionbackend.enums.LaneStatus.ACTIVE)
+                .createdAt(System.currentTimeMillis())
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        lane = laneRepository.save(lane);
+        log.info("Created new Lane '{}' for Intersection ID: {}", lane.getDirectionName(), intersectionId);
+
+        return LaneResponse.builder()
+                .id(lane.getId())
+                .directionName(lane.getDirectionName())
+                .intersectionId(intersectionId)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public CameraResponse createCamera(Long laneId, CameraCreateRequest request) {
+        Lane lane = laneRepository.findById(laneId)
+                .orElseThrow(() -> new LaneNotFoundException(laneId));
+
+        CameraDevice camera = CameraDevice.builder()
+                .lane(lane)
+                .cameraName(request.getCameraName())
+                .ipAddress(request.getIpAddress())
+                .macAddress(request.getMacAddress())
+                .serialNumber(request.getSerialNumber())
+                .status(request.getStatus() != null ? request.getStatus() : CameraStatus.ONLINE)
+                .createAt(System.currentTimeMillis())
+                .updatedAt(System.currentTimeMillis())
+                .build();
+
+        camera = cameraDeviceRepository.save(camera);
+        log.info("Created new Camera '{}' for Lane ID: {}", camera.getIpAddress(), laneId);
+
+        return CameraResponse.builder()
+                .id(camera.getId())
+                .ipAddress(camera.getIpAddress())
+                .status(camera.getStatus())
+                .laneId(laneId)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CurrentTrafficResponse getCurrentTraffic() {
+        // 1. Quét toàn bộ Ngã tư và tính độ kẹt xe thật
+        List<IntersectionTrafficResponse> intersections = intersectionRepository.findAll().stream()
+                .map(this::mapToIntersectionTraffic)
+                .collect(Collectors.toList());
+
+        // 2. Lấy dữ liệu các dải đường nối
+        List<RoadSegmentResponse> roadSegments = roadSegmentService.getAllRoadSegments();
+
+        // 3. Trả về cho Frontend vẽ Bản đồ
+        return CurrentTrafficResponse.builder()
+                .intersections(intersections)
+                .roadSegments(roadSegments)
+                .simulationRunning(false)
+                .build();
+    }
+
+    private IntersectionTrafficResponse mapToIntersectionTraffic(Intersection intersection) {
+        List<Lane> lanes = laneRepository.findByIntersectionId(intersection.getId());
+
+        int totalVehicles = 0;
+        double maxCongestion = 0.0;
+
+        for (Lane lane : lanes) {
+            TrafficLog latestLog = trafficLogRepository.findFirstByLaneIdOrderByRecordedAtDesc(lane.getId()).orElse(null);
+            if (latestLog != null) {
+                totalVehicles += latestLog.getVehicleCount();
+                if (latestLog.getCongestionLevel() > maxCongestion) {
+                    maxCongestion = latestLog.getCongestionLevel();
+                }
+            }
+        }
+
+        String trafficLevel = "LOW";
+        if (maxCongestion > 60.0) trafficLevel = "HIGH";
+        else if (maxCongestion > 30.0) trafficLevel = "MEDIUM";
+
+        return IntersectionTrafficResponse.builder()
+                .id(intersection.getId())
+                .name(intersection.getName())
+                .address(intersection.getAddress())
+                .coordinates(intersection.getCoordinates())
+                .operatingMode(intersection.getOperatingMode().name())
+                .trafficLevel(trafficLevel)
+                .vehicleCount(totalVehicles)
+                .build();
     }
 }
