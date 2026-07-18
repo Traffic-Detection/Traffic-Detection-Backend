@@ -1,12 +1,7 @@
 package com.gwuy.sba301.trafficdetectionbackend.service.interfaces;
 
-import com.gwuy.sba301.trafficdetectionbackend.dto.request.TrafficLogRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.request.UpdateOperatingModeRequest;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.CameraResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.IntersectionResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.LaneResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.SignalHistoryResponse;
-import com.gwuy.sba301.trafficdetectionbackend.dto.response.TrafficLogResponse;
+import com.gwuy.sba301.trafficdetectionbackend.dto.request.*;
+import com.gwuy.sba301.trafficdetectionbackend.dto.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
