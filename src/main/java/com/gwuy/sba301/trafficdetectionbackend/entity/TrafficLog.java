@@ -31,7 +31,9 @@ public class TrafficLog {
     @Column(name = "congestion_level", nullable = false)
     Double congestionLevel;
 
-    @Column(name = "recorded_at", updatable = false)
-    @CreationTimestamp
-    LocalDateTime recordedAt;
+    @Column(name = "frame_url")
+    String frameUrl;
+
+    @Column(name = "recorded_at", updatable = false, nullable = false)
+    private LocalDateTime recordedAt;
 }

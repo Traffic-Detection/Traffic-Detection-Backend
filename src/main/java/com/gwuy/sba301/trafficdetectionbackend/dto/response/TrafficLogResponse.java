@@ -12,5 +12,6 @@ public class TrafficLogResponse {
     private Long laneId;
     private Integer vehicleCount;
     private Double congestionLevel;
+    private String frameUrl;
     private LocalDateTime recordedAt;
 }

@@ -54,7 +54,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 2. CAMERA AI: Chỉ dành riêng cho thiết bị phần cứng đẩy dữ liệu kẹt xe lên
-                        .requestMatchers(HttpMethod.POST, "/api/traffic-logs").hasAuthority("ROLE_CAMERA")
+                        .requestMatchers(HttpMethod.POST, "/api/traffic-logs").hasAnyAuthority("ROLE_ADMIN", "ROLE_CAMERA")
 
                         // 3. ADMIN & OPERATOR: Được phép cấu hình đèn và chuyển chế độ (MANUAL/AI)
                         .requestMatchers(HttpMethod.PUT, "/api/intersections/*/operating-mode").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERATOR")

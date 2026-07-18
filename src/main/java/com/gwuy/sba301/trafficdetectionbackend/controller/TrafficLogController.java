@@ -10,9 +10,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,9 +35,11 @@ public class TrafficLogController {
             @ApiResponse(responseCode = "404", description = "Lane not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping
-    public ResponseEntity<Void> recordTrafficLog(@Valid @RequestBody TrafficLogRequest request) {
-        trafficControlService.recordTrafficLog(request);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> recordTrafficLog(
+            @Valid @RequestPart("data") TrafficLogRequest request,
+            @RequestPart("image") MultipartFile image) {
+        trafficControlService.recordTrafficLog(request, image);
         return ResponseEntity.ok().build();
     }
 

@@ -48,7 +48,7 @@ databaseChangeLog:
       file: db/changelog/v3.0/017-create-signal-config-table.yaml
 
   - include:
-      file: db/changelog/v4.0/018-create-road-segments-table.yaml
+      file: db/changelog/v4.0/018-add-frame-url-to-traffic-logs.yaml
 
   - include:
-      file: db/changelog/v4.0/019-create-route-histories-table.yaml
+      file: db/changelog/v4.0/019-seed-demo-data.yaml
