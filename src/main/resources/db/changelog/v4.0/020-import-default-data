@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: import-data-v1.0
+      author: long
+      changes:
+        - sql:
+            dbms: mysql
+            splitStatements: true
+            stripComments: true
+            sql: |
+              -- 1. BẢNG users
+              INSERT INTO `users` (`id`, `username`, `password`, `email`, `full_name`, `role_id`, `enabled`, `created_at`, `updated_at`) VALUES 
+              (1, 'admin', '$2a$12$DbGH5.cvHBfYyOIxeGdTdugaK.e.NDp295sr0dSKGM8SGuPx.1Rt.', 'admin@traffic.local', 'Quản Trị Viên', 1, 1, '2026-06-30 20:59:52', '2026-06-30 20:59:52'),
+              (2, 'camera_ai', '$2a$12$DbGH5.cvHBfYyOIxeGdTdugaK.e.NDp295sr0dSKGM8SGuPx.1Rt.', 'camera@traffic.local', 'Camera Simulator', 3, 1, '2026-06-30 20:59:52', '2026-06-30 20:59:52')
+              ON DUPLICATE KEY UPDATE `username`=VALUES(`username`), `password`=VALUES(`password`);
+
+              -- 2. BẢNG intersections
+              INSERT INTO `intersections` (`id`, `name`, `operating_mode`, `created_at`, `address`, `coordinates`, `status`) VALUES 
+              (1, 'Ngã tư Thủ Đức', 'AI', '2026-06-30 20:59:52', 'Xa lộ Hà Nội, TP Thủ Đức', '{"lat": 10.849148, "lng": 106.773968}', 'ACTIVE'),
+              (2, 'Ngã tư Hàng Xanh', 'MANUAL', '2026-06-30 20:59:52', 'Điện Biên Phủ, Bình Thạnh', '{"lat": 10.8, "lng": 106.7111}', 'ACTIVE')
+              ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `operating_mode`=VALUES(`operating_mode`);
+
+              -- 3. BẢNG lanes (Tắt khóa ngoại tạm thời để update an toàn)
+              SET FOREIGN_KEY_CHECKS = 0;
+              INSERT INTO `lanes` (`id`, `intersection_id`, `direction_name`, `opposing_lane_id`, `status`, `created_at`) VALUES 
+              (1, 1, 'Hướng Bắc (Northbound)', 2, 'ACTIVE', 1782827992000),
+              (2, 1, 'Hướng Nam (Southbound)', 1, 'ACTIVE', 1782827992000),
+              (3, 1, 'Hướng Đông (Eastbound)', 4, 'ACTIVE', 1782827992000),
+              (4, 1, 'Hướng Tây (Westbound)', 3, 'ACTIVE', 1782827992000),
+              (5, 2, 'Hướng Bắc (Northbound)', 6, 'ACTIVE', 1782827992000),
+              (6, 2, 'Hướng Nam (Southbound)', 5, 'ACTIVE', 1782827992000),
+              (7, 2, 'Hướng Đông (Eastbound)', 8, 'ACTIVE', 1782827992000),
+              (8, 2, 'Hướng Tây (Westbound)', 7, 'ACTIVE', 1782827992000)
+              ON DUPLICATE KEY UPDATE `direction_name`=VALUES(`direction_name`);
+              SET FOREIGN_KEY_CHECKS = 1;
+
+              -- 4. BẢNG camera_devices
+              INSERT INTO `camera_devices` (`id`, `lane_id`, `ip_address`, `status`, `camera_name`, `create_at`) VALUES 
+              (1, 1, '192.168.1.10', 'ONLINE', 'CAM-TD-NORTH', 1782827992000),
+              (2, 2, '192.168.1.11', 'ONLINE', 'CAM-TD-SOUTH', 1782827992000),
+              (3, 3, '192.168.1.12', 'ONLINE', 'CAM-TD-EAST', 1782827992000),
+              (4, 4, '192.168.1.13', 'ONLINE', 'CAM-TD-WEST', 1782827992000),
+              (5, 5, '192.168.2.10', 'OFFLINE', 'CAM-HX-NORTH', 1782827992000),
+              (6, 6, '192.168.2.11', 'OFFLINE', 'CAM-HX-SOUTH', 1782827992000),
+              (7, 7, '192.168.2.12', 'OFFLINE', 'CAM-HX-EAST', 1782827992000),
+              (8, 8, '192.168.2.13', 'OFFLINE', 'CAM-HX-WEST', 1782827992000)
+              ON DUPLICATE KEY UPDATE `ip_address`=VALUES(`ip_address`), `status`=VALUES(`status`);
+
+              -- 5. BẢNG road_segments
+              INSERT INTO `road_segments` (`id`, `road_name`, `from_intersection_id`, `to_intersection_id`, `distance`, `speed_limit`, `traffic_level`, `traffic_cost`, `status`, `created_at`) VALUES 
+              (1, 'Xa Lộ Hà Nội - Điện Biên Phủ', 1, 2, 8500, 60, 'LOW', 5, 'ACTIVE', '2026-07-13 17:22:29')
+              ON DUPLICATE KEY UPDATE `road_name`=VALUES(`road_name`);
+
+              -- 6. BẢNG signal_configs
+              INSERT INTO `signal_configs` (`id`, `intersection_id`, `lane_id`, `yellow_duration`, `green_duration`, `red_duration`) VALUES 
+              (17, 1, 1, 6, 29, 56),
+              (18, 1, 2, 6, 29, 56),
+              (19, 1, 3, 5, 51, 35),
+              (20, 1, 4, 5, 51, 35),
+              (21, 2, 5, 5, 37, 48),
+              (22, 2, 6, 5, 37, 48),
+              (23, 2, 7, 5, 43, 42),
+              (24, 2, 8, 5, 43, 42)
+              ON DUPLICATE KEY UPDATE `yellow_duration`=VALUES(`yellow_duration`), `green_duration`=VALUES(`green_duration`);
